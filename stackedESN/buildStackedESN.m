@@ -16,7 +16,7 @@ function [sWin, sW] = buildStackedESN(input_size, reservoir_size, connectivity, 
             case 'rand'
                 sWin{k} = (rand(reservoir_size(k),1 + input_size) - 0.5) .* inputScaling;
             case 'randn'
-                sWin{k} = (randn(reservoir_size(k),1 + input_size) - 0.5) .* inputScaling;
+                sWin{k} = (randn(reservoir_size(k),1 + input_size)) .* inputScaling;
         end
 
         % generate connecting weight in reservoir

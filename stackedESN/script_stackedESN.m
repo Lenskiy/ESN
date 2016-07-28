@@ -23,7 +23,7 @@ sp_radius = [0.3 2.9];
 lr = [0.2 0.9];
 sigma_noise = 0.00;
 
-[Win, W] = buildStackedESN(size(train_input,2), N, connectivity, sp_radius, 'const');
+[Win, W] = buildStackedESN(size(train_input,2), N, connectivity, sp_radius, 'randn');
 [Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise, 'tanh', 'linear');
 Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise, 'tanh', 'linear', 1);
 
