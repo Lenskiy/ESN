@@ -17,21 +17,21 @@ test_input = mackeyglass_data(mid_point + 1:end - 1, :);
 test_output = mackeyglass_data(mid_point + 2:end, :);
 
 
-N = [10, 10];
-connectivity = [0.1 0.1];
-sp_radius = [0.001 20];
-lr = [0.1 0.1];
-sigma_noise = 0.005;
+N = [20, 20];
+connectivity = [0.2 0.2];
+sp_radius = [0.3 2.9];
+lr = [0.2 0.9];
+sigma_noise = 0.00;
 
-[Win, W] = buildStackedESN(size(train_input,2), N, connectivity, sp_radius);
-[Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise);
-Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise);
+[Win, W] = buildStackedESN(size(train_input,2), N, connectivity, sp_radius, 'const');
+[Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise, 'tanh', 'linear');
+Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise, 'tanh', 'linear', 1);
 
-figure, hold on
-d1 = plot(states_evolution(1:N(1),:)','r');
-d2 = plot(states_evolution(N(1)+1:end,:)','k');
-title('States during the learning stage')
-legend([d1(1), d2(1)],['\rho_1 = ', num2str(sp_radius(1))], ['\rho_2 = ', num2str(sp_radius(2))]);
+% figure, hold on
+% d1 = plot(states_evolution(1:N(1),:)','r');
+% d2 = plot(states_evolution(N(1)+1:end,:)','k');
+% title('States during the learning stage')
+% legend([d1(1), d2(1)],['\rho_1 = ', num2str(sp_radius(1))], ['\rho_2 = ', num2str(sp_radius(2))]);
 
 figure(3), hold on;
 title('Mackeyglass system');
@@ -45,16 +45,16 @@ plot(Y(:,1));
 
 %% Find a best combination of spectral radii for ESN1 and ESN2 and the degree of connectivity
 N_trials = 100;
-lr = [0.1 0.1];
+lr = [0.1 1];
 sigma_noise = 0.005;
-N = [10 10];
+N = [20 20];
 connectivity=0.05:0.05:0.5;
 sp_radius1=0.05:0.1:1;
 sp_radius2=0.05:0.1:1;
 errorLen = length(test_input);
-err_tensor_m = zeros(length(connectivity), length(sp_radius1), length(sp_radius2));
-err_tensor_s = zeros(length(connectivity), length(sp_radius1), length(sp_radius2));
-err_tensor_cor = zeros(length(connectivity), length(sp_radius1), length(sp_radius2));
+err_tensor_m = zeros(length(sp_radius1), length(sp_radius2), length(connectivity));
+err_tensor_s = zeros(length(sp_radius1), length(sp_radius2), length(connectivity));
+err_tensor_cor = zeros(length(sp_radius1), length(sp_radius2), length(connectivity));
 counter = 1;
 total_inters = length(sp_radius1) * length(sp_radius2) * length(connectivity);
 disp('Starting...');
@@ -65,9 +65,9 @@ for c = 1:length(connectivity)
             clear mse;
             for i = 1:N_trials
                 %i
-                [Win, W] = buildStackedESN(size(train_input,2), N, [connectivity(c) connectivity(c)], [sp_radius1(r1); sp_radius2(r2)]);
-                [Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise);
-                Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise); 
+                [Win, W] = buildStackedESN(size(train_input,2), N, [connectivity(c) connectivity(c)], [sp_radius1(r1); sp_radius2(r2)], 'const');
+                [Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise, 'tanh', 'linear');
+                Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise, 'tanh', 'linear', 1); 
                 dif = Y(1:errorLen, :) - test_output(1:errorLen, :);
                 mse(i) = sqrt(trace(dif' * dif));
             end
@@ -80,10 +80,11 @@ for c = 1:length(connectivity)
     end
 end
 
-connectivity_ind = 1;  
+connectivity_ind = 10;  
 
-figure, title('Correlation coefficient');
+figure;
 surf(err_tensor_cor(:,:,connectivity_ind));
+title('Correlation coefficient')
 ax = gca;
 ax.XTick = [1:length(sp_radius1)];
 ax.YTick = [1:length(sp_radius2)];
@@ -91,8 +92,9 @@ ax.XTickLabel = sp_radius1;
 ax.YTickLabel = sp_radius2;
 
 
-figure, title('MSE');
+figure;
 surf(err_tensor_m(:,:,connectivity_ind));
+title('MSE')
 ax = gca;
 ax.XTick = [1:length(sp_radius1)];
 ax.YTick = [1:length(sp_radius2)];
