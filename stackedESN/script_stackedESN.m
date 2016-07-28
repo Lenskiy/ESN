@@ -19,7 +19,7 @@ test_output = mackeyglass_data(mid_point + 2:end, :);
 
 N = [20, 20];
 connectivity = [0.2 0.2];
-sp_radius = [0.3 2.9];
+sp_radius = [0.3 0.9];
 lr = [0.2 0.9];
 sigma_noise = 0.00;
 
@@ -27,13 +27,16 @@ sigma_noise = 0.00;
 [Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise, 'tanh', 'linear');
 Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise, 'tanh', 'linear', 1);
 
-% figure, hold on
-% d1 = plot(states_evolution(1:N(1),:)','r');
-% d2 = plot(states_evolution(N(1)+1:end,:)','k');
-% title('States during the learning stage')
-% legend([d1(1), d2(1)],['\rho_1 = ', num2str(sp_radius(1))], ['\rho_2 = ', num2str(sp_radius(2))]);
+figure, 
+subplot(2,1,1), hold on
+axis([1,size(states_evolution,2), -1, 1])
+d1 = plot(1:size(states_evolution,2), states_evolution(1:N(1),:)','r');
+d2 = plot(1:size(states_evolution,2), states_evolution(N(1)+1:end,:)','k');
+title('States during the learning stage')
+legend([d1(1), d2(1)],['\rho_1 = ', num2str(sp_radius(1)), '  l_1 = ', num2str(lr(1))],...
+                      ['\rho_2 = ', num2str(sp_radius(2)), '  l_2 = ', num2str(lr(2))]);
 
-figure(3), hold on;
+subplot(2,1,2), hold on
 title('Mackeyglass system');
 plot(test_output(:,1));
 plot(Y(:,1));
