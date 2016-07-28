@@ -48,12 +48,12 @@ plot(Y(:,1));
 
 %% Find a best combination of spectral radii for ESN1 and ESN2 and the degree of connectivity
 N_trials = 100;
-lr = [0.1 1];
-sigma_noise = 0.005;
+lr = [0.2 0.9];
+sigma_noise = 0.0;
 N = [20 20];
 connectivity=0.05:0.05:0.5;
-sp_radius1=0.05:0.1:1;
-sp_radius2=0.05:0.1:1;
+sp_radius1=0.05:0.1:1.05;
+sp_radius2=0.05:0.1:1.05;
 errorLen = length(test_input);
 err_tensor_m = zeros(length(sp_radius1), length(sp_radius2), length(connectivity));
 err_tensor_s = zeros(length(sp_radius1), length(sp_radius2), length(connectivity));
@@ -68,17 +68,24 @@ for c = 1:length(connectivity)
             clear mse;
             for i = 1:N_trials
                 %i
-                [Win, W] = buildStackedESN(size(train_input,2), N, [connectivity(c) connectivity(c)], [sp_radius1(r1); sp_radius2(r2)], 'const');
+                [Win, W] = buildStackedESN(size(train_input,2), N, [connectivity(c) connectivity(c)], [sp_radius1(r1); sp_radius2(r2)], 'randn');
                 [Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise, 'tanh', 'linear');
                 Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise, 'tanh', 'linear', 1); 
                 dif = Y(1:errorLen, :) - test_output(1:errorLen, :);
                 mse(i) = sqrt(trace(dif' * dif));
             end
             
-            err_tensor_m(r1, r2, c) = mean(mse(find(mse < 10000)));
-            err_tensor_s(r1, r2, c) = std(mse(find(mse < 10000)));
-            err_tensor_cor(r1, r2, c) = max(xcorr(test_output, Y, 'coeff'));
-            disp(   ['progress: ' num2str(100*counter/total_inters,'%2.2f'),'%',', c = ',num2str( connectivity(c), '%2.2f'),', rho_1 = ', num2str( sp_radius1(r1), '%2.2f'),', rho_2 = ',num2str( sp_radius2(r2), '%2.2f' ),', m = ',num2str( err_tensor_m(r1, r2, c) ),', s = ',num2str(err_tensor_s(r1, r2, c)),', c = ',num2str( err_tensor_cor(r1, r2, c) )] );
+            err_tensor_m(r1, r2, c) = mean(mse(find(mse < 50)));
+            err_tensor_s(r1, r2, c) = std(mse(find(mse < 50)));
+            ccfunc = xcorr(test_output - mean(test_output), Y - mean(Y), 'coeff');
+            err_tensor_cor(r1, r2, c) = max(ccfunc);
+            disp(   ['progress: ' num2str(100*counter/total_inters,'%2.2f'),'%',...
+                ', c = ',num2str( connectivity(c), '%2.2f'),...
+                ', rho_1 = ', num2str( sp_radius1(r1), '%2.2f'),...
+                ', rho_2 = ', num2str( sp_radius2(r2), '%2.2f' ),...
+                ', m = ',num2str( err_tensor_m(r1, r2, c) ),...
+                ', s = ',num2str(err_tensor_s(r1, r2, c)),...
+                ', c = ',num2str( err_tensor_cor(r1, r2, c) )]);
         end
     end
 end
