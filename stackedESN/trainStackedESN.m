@@ -56,13 +56,13 @@ function [Wout, x, x_evolution_org] = trainStackedESN(input,...
         end
     end
     
-
+	% skip the bias and input vector
+	x_evolution_org = x_evolution(1 + input_size + 1:end, :);
   	switch output_type
         case 'linear'
             
         case 'quadratic'
-            % skip the bias and input vector
-            x_evolution_org = x_evolution(1 + input_size + 1:end, :);
+
             %pre-locate memory
             x_evolution_plus = zeros((states_size - 1) * states_size / 2 + 2 * states_size + input_size + 1, size(x_evolution_org,2));
 
