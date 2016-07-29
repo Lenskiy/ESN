@@ -1,9 +1,12 @@
 
 %% Simple test script
-data = mackeyglass(1000);
+%data = mackeyglass(1600);
+
+data = meanAdjSdevNorm(mackeyglass(1600));
+
 testp = 0.5;
 
-MCruns = 100;
+MCruns = 10;
 
 split_point = round((1-testp) * length(data)); % take testp as hold out test set
 
@@ -13,11 +16,11 @@ test_input   = data(split_point + 1:end - 1, :);
 test_output  = data(split_point + 2:end, :);
 
 % ESN settings
-N = [10, 10];
-connectivity = [0.1 0.1];
-sp_radius = [0.1 1.0];
-lr = [0.1 0.9];
-sigma_noise = 0.01;
+N = [20, 20, 20];
+connectivity = [0.1, 0.1, 0.1];
+sp_radius = [0.1, 0.5, 1];
+lr = [0.1,0.5, 0.9];
+sigma_noise = 0.1;
 
 tic
 
