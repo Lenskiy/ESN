@@ -22,7 +22,7 @@ function [mse_results, mse_results_std, parameters_grid, best_mse, best_paramter
     mse_results = inf .* ones(1,numParamSets);
     mse_results_std = inf .* ones(1,numParamSets);
     parfor experiment = 1:numParamSets
-        disp(['progress: ', num2str(experiment/numParamSets, '%2.2f')]);
+        %disp(['progress: ', num2str(experiment/numParamSets, '%2.2f')]);
         % Split parameters to corresponding variables
         p = parameters_grid(experiment,:);
         numNodes = p(1:numESNparams:end);
@@ -31,6 +31,7 @@ function [mse_results, mse_results_std, parameters_grid, best_mse, best_paramter
         leakRate = p(4:numESNparams:end);
         mse_mean = 0;
         mse_std = 0;
+        successful_run_counter = 0;
         for k = 1:nTrials
             [sWin, sW] = buildStackedESN(input_size, numNodes,...
                                         connectivity,...
@@ -47,15 +48,17 @@ function [mse_results, mse_results_std, parameters_grid, best_mse, best_paramter
             dif = Y - testing_output;
             % temporary to skip huge errors
             mse_temp = sum(sqrt(sum(dif.^2))); 
-            if(mse_temp < 100)
+            if(mse_temp < 20)
                 % calculating online the mean and the std of the MSE of each trial 
+                successful_run_counter = successful_run_counter + 1;
                 delta = (mse_temp - mse_mean);
-                mse_mean = mse_mean + delta/k 
+                mse_mean = mse_mean + delta/successful_run_counter;
                 mse_std =  mse_std + delta*(mse_temp - mse_mean)
             end
         end
+        disp(['average MSE: ', num2str(mse_mean, '%2.2f')]);
         mse_results(experiment) = mse_mean;
-        mse_results_std(experiment) = sqrt(mse_std / (nTrials - 1));
+        mse_results_std(experiment) = sqrt(mse_std / (successful_run_counter - 1));
     end
 
     [best_mse, best_experiment] = min(mse_results);
