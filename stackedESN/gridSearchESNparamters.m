@@ -55,7 +55,7 @@ function [mse_results, mse_results_std, parameters_grid, best_mse, best_paramter
             end
         end
         mse_results(experiment) = mse_mean;
-        mse_results_std(experiment) = mse_std / (nTrials - 1);
+        mse_results_std(experiment) = sqrt(mse_std / (nTrials - 1));
     end
 
     [best_mse, best_experiment] = min(mse_results);

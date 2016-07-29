@@ -54,8 +54,8 @@ nTrials = 100;
 nESNs = 2;
 
             %numNodes, leakRate, spectalRadii, connectivity
-sParams{1} = {[20], [0.3], [0.2:0.2:1], [0.1]};  % ESN1  
-sParams{2} = {[20], [1.0], [0.2:0.2:1], [0.1]};  % ESN2
+sParams{1} = {[20], [0.2:0.2:1], [0.2:0.2:1], [0.1, 0.5]};  % ESN1  
+sParams{2} = {[20], [0.2:0.2:1], [0.2:0.2:1], [0.1, 0.5]};  % ESN2
 
 % Evaluate all combinations of paramters 
 [mse_results, mse_results_std, parameters_grid, best_mse, best_paramters] = ...
