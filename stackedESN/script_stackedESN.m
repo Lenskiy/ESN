@@ -53,7 +53,7 @@ ESNtype = {'randn', 'tanh', 'linear'};
 nTrials = 100;
 nESNs = 2;
 
-            %numNodes, leakRate, connectivity, spectalRadii
+            %numNodes, leakRate, spectalRadii, connectivity
 sParams{1} = {[20], [0.3], [0.2:0.2:1], [0.1]};  % ESN1  
 sParams{2} = {[20], [1.0], [0.2:0.2:1], [0.1]};  % ESN2
 
