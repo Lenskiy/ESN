@@ -15,9 +15,5 @@ function [ Y ] = NARMA10series( len )
     end
     
     Y = Y(11:size(Y,1),1);
-    
-<<<<<<< HEAD
+
 end
-=======
-end
->>>>>>> 926071904915875336606d412ca965ae4bb20887
