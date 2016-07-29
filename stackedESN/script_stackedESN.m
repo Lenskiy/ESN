@@ -18,8 +18,8 @@ test_output = mackeyglass_data(mid_point + 2:end, :);
 
 
 N = [20, 20];
-connectivity = [0.2 0.2];
-sp_radius = [0.3 0.9];
+connectivity = [0.5 0.5];
+sp_radius = [0.1 1.0];
 lr = [0.2 0.9];
 sigma_noise = 0.00;
 
@@ -90,25 +90,27 @@ for c = 1:length(connectivity)
     end
 end
 
-connectivity_ind = 10;  
+connect_ind = 10;  
 
 figure;
-surf(err_tensor_cor(:,:,connectivity_ind));
-title('Correlation coefficient')
+surf(err_tensor_cor(:,:,connect_ind));
+title(['Correlation coefficient (connectivity = ',num2str(connectivity(connect_ind)),')']);
 ax = gca;
 ax.XTick = [1:length(sp_radius1)];
 ax.YTick = [1:length(sp_radius2)];
 ax.XTickLabel = sp_radius1;
 ax.YTickLabel = sp_radius2;
-
+xlabel(['\rho_1(l = ',num2str(lr(1)),')']);
+ylabel(['\rho_2(l = ',num2str(lr(2)),')']);
 
 figure;
-surf(err_tensor_m(:,:,connectivity_ind));
-title('MSE')
+surf(err_tensor_m(:,:,connect_ind));
+title(['MSE (connectivity = ',num2str(connectivity(connect_ind)),')']);
 ax = gca;
 ax.XTick = [1:length(sp_radius1)];
 ax.YTick = [1:length(sp_radius2)];
 ax.XTickLabel = sp_radius1;
 ax.YTickLabel = sp_radius2;
-
+xlabel(['\rho_1(l = ',num2str(lr(1)),')']);
+ylabel(['\rho_2(l = ',num2str(lr(2)),')']);
 
