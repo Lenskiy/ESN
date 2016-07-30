@@ -8,19 +8,26 @@
 % test_input = Lorenz_data(mid_point + 1:end - 1, :);
 % test_output = Lorenz_data(mid_point + 2:end, :);
 
+%% NARMA10 training/testing data
+% NARMA10_data = NARMA10(5000);
+% mid_point = round(19 * length(NARMA10_data) / 20); % take a small portion for training
+% train_input = NARMA10_data(1:mid_point, :);
+% train_output = NARMA10_data(2:mid_point + 1, :);
+% test_input = NARMA10_data(mid_point + 1:end - 1, :);
+% test_output = NARMA10_data(mid_point + 2:end, :);
+
 %% Mackeyglass training/testing data
 mackeyglass_data = mackeyglass(5000);
-mid_point = round(19 * length(mackeyglass_data) / 20); % take a small portion for training
+mid_point = round(15 * length(mackeyglass_data) / 20); % take a small portion for training
 train_input = mackeyglass_data(1:mid_point, :);
 train_output = mackeyglass_data(2:mid_point + 1, :);
 test_input = mackeyglass_data(mid_point + 1:end - 1, :);
 test_output = mackeyglass_data(mid_point + 2:end, :);
 
-
 N = [20, 20];
-connectivity = [0.5 0.5];
-sp_radius = [0.1 1.0];
-lr = [0.2 0.9];
+lr = [0.1 0.9];
+sp_radius = [1. 0.5];
+connectivity = [0.01 0.01];
 sigma_noise = 0.00;
 
 [Win, W] = buildStackedESN(size(train_input,2), N, connectivity, sp_radius, 'randn');
@@ -57,6 +64,9 @@ nESNs = 2;
 sParams{1} = {[20], [0.2:0.2:1], [0.2:0.2:1], [0.1, 0.5]};  % ESN1  
 sParams{2} = {[20], [0.2:0.2:1], [0.2:0.2:1], [0.1, 0.5]};  % ESN2
 
+sParams{1} = {[20], [.2:0.2:0.8], [0.8], [0.1]};  % ESN1  
+sParams{2} = {[20], [.2:0.2:0.8], [0.8], [0.1]};  % ESN2
+
 % Evaluate all combinations of paramters 
 [mse_results, mse_results_std, parameters_grid, best_mse, best_paramters] = ...
     gridSearchESNparamters(train_input, train_output, test_input(1,:),...
@@ -65,14 +75,29 @@ sParams{2} = {[20], [0.2:0.2:1], [0.2:0.2:1], [0.1, 0.5]};  % ESN2
 % put inf for the parameters of interest that will be selected;
 % other parameters are fixed
 %selecting_params = [20; 0.3; inf; 0.1; 20; 1.0; inf; 0.1];
-sParams{1} = {20, 0.3, inf, 0.1};  % ESN1  
-sParams{2} = {20, 1.0, inf, 0.1};  % ESN2
+sParams{1} = {20, inf, 0.8, 0.5};  % ESN1  
+sParams{2} = {20, inf, 0.8, 0.5};  % ESN2
 
 % select the parameters 
 [errMap, X, Y] = getErrorMap(parameters_grid, mse_results, sParams);
  
 figure;
 surf(X, Y, errMap);
+
+
+sParams{1} = {20, 1.0, inf, 0.1};  % ESN1  
+sParams{2} = {20, 0.8, inf, 0.1};  % ESN2
+
+% select the parameters 
+[errMap, X, Y] = getErrorMap(parameters_grid, mse_results, sParams);
+ 
+figure;
+surf(X, Y, errMap);
+
+
+
+
+
 %title(['MSE (connectivity = ',num2str(connectivity(connect_ind)),')']);
 % ax = gca;
 % ax.XTick = [1:length(sp_radius1)];
