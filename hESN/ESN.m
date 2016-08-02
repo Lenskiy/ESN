@@ -34,7 +34,7 @@ classdef ESN < handle
                 u = input(j, :)';
                 X(j, 1:obj.numNodes) = obj.reservoir.forward(obj.W_in * [1; u]);
             end
-            X(:, obj.numNodes + 1:end) = [input ones(size(target,1),1)];
+            X(:, obj.numNodes + 1:end) = [ones(size(target,1),1) input];
             Xinv = pseudoinverse(X(initLen + 1:end,:)',[],'lsqr', 'tikhonov',...
                 {@(x,r) r*normest(X)*x, 1e-4});
             
