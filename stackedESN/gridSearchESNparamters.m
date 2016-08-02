@@ -16,12 +16,12 @@ function [mse_results, mse_results_std, parameters_grid, best_mse, best_paramter
         allESNparameters = [allESNparameters sParams{k}];
     end
     parameters_grid = cartprod(allESNparameters);
-    numParamSets = length(parameters_grid);
+    numParamSets = length(parameters_grid)
 
     
     mse_results = inf .* ones(1,numParamSets);
     mse_results_std = inf .* ones(1,numParamSets);
-    for experiment = 1:numParamSets
+    parfor experiment = 1:numParamSets
         %disp(['progress: ', num2str(experiment/numParamSets, '%2.2f')]);
         % Split parameters to corresponding variables
         p = parameters_grid(experiment,:);
@@ -41,7 +41,7 @@ function [mse_results, mse_results_std, parameters_grid, best_mse, best_paramter
                                             training_output,...
                                             sWin, sW, leakRate,...
                                             stdNoise, node_type, output_type);
-            Y = runStackedESN(testing_input, test_data_size,  x, sWin, sW,...
+            Y = genStackedESN(testing_input, test_data_size,  x, sWin, sW,...
                                 sWout, leakRate, stdNoise, node_type,...
                                 output_type, feedback_scaling );
             
@@ -56,7 +56,7 @@ function [mse_results, mse_results_std, parameters_grid, best_mse, best_paramter
                 mse_std =  mse_std + delta*(mse_temp - mse_mean);
             end
         end
-        disp(['E(MSE)/E(STD): ', num2str(mse_mean, '%2.2f', '/', num2str(mse_std, '%2.2f')]);
+        disp(['E(MSE)/E(STD): ', num2str(mse_mean, '%2.2f'), '/', num2str(sqrt(mse_std), '%2.2f')]);
         mse_results(experiment) = mse_mean;
         mse_results_std(experiment) = sqrt(mse_std / (successful_run_counter - 1));
     end

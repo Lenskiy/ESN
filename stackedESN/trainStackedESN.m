@@ -1,4 +1,4 @@
-function [Wout, x, x_evolution_only] = trainStackedESN(input,...
+function [Wout, x, x_evolution_only, tf] = trainStackedESN(input,...
                                                         target, Win, W, lr, sigma, node_type, output_type)
     trainLen = size(input,1);
     initLen = round(0.1 * trainLen);
@@ -63,7 +63,7 @@ function [Wout, x, x_evolution_only] = trainStackedESN(input,...
 	x_evolution_only = x_evolution(1 + input_size + 1:end, :);
   	switch output_type
         case 'linear'
-            
+            tf = eye(size(x_evolution,1), size(x_evolution,1));
         case 'quadratic'
             %pre-locate memory
             x_evolution_plus = zeros((total_states_size - 1) * total_states_size / 2 + 2 * total_states_size + input_size + 1, size(x_evolution_only,2));
@@ -76,15 +76,29 @@ function [Wout, x, x_evolution_only] = trainStackedESN(input,...
                 x_evolution_plus(:, i) = [x_evolution(:, i); x_evolution_only(:,i).^2; X_];
             end
             x_evolution = x_evolution_plus;
+            tf = eye(size(x_evolution,1), size(x_evolution,1));
+        case 'pca'
+            %m = mean(x_evolution)';
+            %Xc = x_evolution'-repmat(m,1,size(x_evolution,1)); % Center and transpose
+
+             %Obtain covariance matrix and calculate egien vectors and values
+            CovMat = x_evolution * x_evolution';
+            %Calculate eigen values and vectors
+            [evec eval] = eig(CovMat);
+            %Sort values in descending order
+            %Eigenvectors that correspond to larger eigenavalues will be used for
+            %dimensionality reduction
+            tf = evec(end-9:end,:);
+            x_evolution = tf * x_evolution;
     end
     
    
-    % Train ouput layer by solving a system of linear equations 
-    Xinv = pseudoinverse(x_evolution, [],'lsqr');
+    % Train ouput layer by solving a overdetermined system of linear equations 
+    %Xinv = pseudoinverse(x_evolution, [],'lsqr');
     %--------------
-    %Xinv = pseudoinverse(x_evolution,[],'lsqr', 'tikhonov', {@(x,r) r*normest(x_evolution)*x, 1e-4});
+    Xinv = pseudoinverse(x_evolution,[],'lsqr', 'tikhonov', {@(x,r) r*normest(x_evolution)*x, 1e-4});
     %-------------
-    Wout = target(initLen + 1:end, :)' * Xinv; 
+    Wout =  target(initLen + 1:end, :)' * Xinv; 
     
     % Add here the Wiener-Hopf solution
 end

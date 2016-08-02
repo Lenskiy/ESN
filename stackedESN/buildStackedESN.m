@@ -24,7 +24,7 @@ function [sWin, sW] = buildStackedESN(input_size, reservoir_size, connectivity, 
         W(W ~= 0) = W(W ~= 0) - 0.5;
 
         % compute spectral radius i.e. the largest absolute eigen value 
-        opts.tol = 1e-3;
+        opts.tol = 1e-2;
         maxVal = max(abs(eigs(W, 1, 'lm', opts)));
         W = sp(k) * W/maxVal; % normalize W such that spectral radius is sp
         sW{k} = W;

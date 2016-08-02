@@ -17,31 +17,40 @@
 % test_output = NARMA10_data(mid_point + 2:end, :);
 
 %% Mackeyglass training/testing data
-mackeyglass_data = mackeyglass(5000);
+mackeyglass_data = mackeyglass(2000);
 mid_point = round(15 * length(mackeyglass_data) / 20); % take a small portion for training
 train_input = mackeyglass_data(1:mid_point, :);
 train_output = mackeyglass_data(2:mid_point + 1, :);
 test_input = mackeyglass_data(mid_point + 1:end - 1, :);
 test_output = mackeyglass_data(mid_point + 2:end, :);
 
-N = [20, 20];
-lr = [0.1 0.9];
-sp_radius = [1. 0.5];
-connectivity = [0.01 0.01];
+% N = [10, 10, 10, 10];
+% lr = [0.9 0.1, 0.5, 0.25];
+% sp_radius = [0.1 0.9, 0.5, 0.25];
+% connectivity = [0.1 0.1 0.1, 0.1];
+numESNs = 10;
+N = round(10 * rand(numESNs,1) + 10);
+lr = rand(numESNs,1);
+sp_radius = rand(numESNs,1);
+connectivity = 0.2 * rand(numESNs,1) + 0.01;
 sigma_noise = 0.00;
 
 [Win, W] = buildStackedESN(size(train_input,2), N, connectivity, sp_radius, 'randn');
-[Wout, states, states_evolution] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise, 'tanh', 'linear');
-Y = runStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise, 'tanh', 'linear', 1);
+[Wout, states, states_evolution, tf] = trainStackedESN(train_input, train_output, Win, W, lr, sigma_noise, 'tanh', 'pca');
+Y = genStackedESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, sigma_noise, 'tanh', 'pca', 1, tf);
 
 figure, 
 subplot(2,1,1), hold on
 axis([1,size(states_evolution,2), -1, 1])
 d1 = plot(1:size(states_evolution,2), states_evolution(1:N(1),:)','r');
-d2 = plot(1:size(states_evolution,2), states_evolution(N(1)+1:end,:)','k');
+d2 = plot(1:size(states_evolution,2), states_evolution(N(1)+1:end,:)','g');
+d3 = plot(1:size(states_evolution,2), states_evolution(N(1)+N(2)+1:end,:)','b');
+d4 = plot(1:size(states_evolution,2), states_evolution(N(1)+N(2)+N(3)+1:end,:)','k');
 title('States during the learning stage')
-legend([d1(1), d2(1)],['\rho_1 = ', num2str(sp_radius(1)), '  l_1 = ', num2str(lr(1))],...
-                      ['\rho_2 = ', num2str(sp_radius(2)), '  l_2 = ', num2str(lr(2))]);
+legend([d1(1), d2(1), d3(1), d4(1)],['\rho_1 = ', num2str(sp_radius(1)), '  l_1 = ', num2str(lr(1))],...
+                      ['\rho_2 = ', num2str(sp_radius(2)), '  l_2 = ', num2str(lr(2))],...
+                      ['\rho_3 = ', num2str(sp_radius(3)), '  l_3 = ', num2str(lr(3))],...
+                      ['\rho_4 = ', num2str(sp_radius(4)), '  l_4 = ', num2str(lr(4))]);
 
 subplot(2,1,2), hold on
 title('Mackeyglass system');
@@ -61,8 +70,8 @@ nTrials = 100;
 nESNs = 2;
 
             %numNodes, leakRate, spectalRadii, connectivity
-sParams{1} = {[20], [0.2:0.2:1], [0.2:0.2:1], [0.1, 0.5]};  % ESN1  
-sParams{2} = {[20], [0.2:0.2:1], [0.2:0.2:1], [0.1, 0.5]};  % ESN2
+sParams{1} = {[100], [0.1:0.1:1], [0.1:0.1:1.1], [0.05 0.1]};  % ESN1  
+sParams{2} = {[100], [0.1:0.1:1], [0.1:0.1:1.1], [0.05 0.1]};  % ESN2
 
 sParams{1} = {[20], [.2:0.2:0.8], [0.8], [0.1]};  % ESN1  
 sParams{2} = {[20], [.2:0.2:0.8], [0.8], [0.1]};  % ESN2
@@ -75,18 +84,8 @@ sParams{2} = {[20], [.2:0.2:0.8], [0.8], [0.1]};  % ESN2
 % put inf for the parameters of interest that will be selected;
 % other parameters are fixed
 %selecting_params = [20; 0.3; inf; 0.1; 20; 1.0; inf; 0.1];
-sParams{1} = {20, inf, 0.8, 0.5};  % ESN1  
-sParams{2} = {20, inf, 0.8, 0.5};  % ESN2
-
-% select the parameters 
-[errMap, X, Y] = getErrorMap(parameters_grid, mse_results, sParams);
- 
-figure;
-surf(X, Y, errMap);
-
-
-sParams{1} = {20, 1.0, inf, 0.1};  % ESN1  
-sParams{2} = {20, 0.8, inf, 0.1};  % ESN2
+sParams{1} = {100, inf, 0.2, 0.05};  % ESN1  
+sParams{2} = {100, inf, 0.2, 0.05};  % ESN2
 
 % select the parameters 
 [errMap, X, Y] = getErrorMap(parameters_grid, mse_results, sParams);
@@ -96,6 +95,28 @@ surf(X, Y, errMap);
 
 
 
+
+
+
+          %numNodes, leakRate, spectalRadii, connectivity
+sParams{1} = {100, inf, 1.1, 0.1};  % ESN1  
+sParams{2} = {100, inf, 1.1, 0.1};  % ESN2
+
+% select the parameters 
+[errMap, X, Y] = getErrorMap(parameters_grid, mse_results, sParams);
+ 
+figure;
+surf(X, Y, errMap);
+
+
+sParams{1} = {100, 1.0, inf, 0.1};  % ESN1  
+sParams{2} = {100, 1.0, inf, 0.1};  % ESN2
+
+% select the parameters 
+[errMap, X, Y] = getErrorMap(parameters_grid, mse_results, sParams);
+ 
+figure;
+surf(X, Y, errMap);
 
 
 %title(['MSE (connectivity = ',num2str(connectivity(connect_ind)),')']);
