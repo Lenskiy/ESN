@@ -19,8 +19,8 @@ parameters  = struct('neuron',      'tanh',...
 esn = ESN(architecture, parameters);
 train = Train();
 train.train(esn, train_input, train_output, 100) % do not change the state, or be able to restart the state to the begining
-Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
-%Y = esn.generate(train_input(1, :), size(train_output(:,1),1), 1);
+%Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
+Y = esn.predict(train_input(1, :), 1);
 figure, hold on; title('Mackeyglass system');
 plot(test_input(1,:));
 plot(Y(1,:));

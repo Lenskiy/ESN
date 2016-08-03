@@ -62,7 +62,7 @@ classdef ESN < handle
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function Y = predict(obj, input, feedback_scaling)
           Y = zeros(size(input,1), size(input,2));
-          for k = 1:size(u,2)
+          for k = 1:size(input,2)
                Y(:, k) = feedback_scaling * forward(obj, input(:, k));
           end
       end      
