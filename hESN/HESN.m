@@ -1,31 +1,21 @@
-classdef ESN < handle
-   properties
+classdef HESN < handle
+    properties
+        esns;
         reservoir;
-        architecture = struct('inputDim',   0, ...
-                              'numNodes',   0, ... 
-                              'outputDim',  0);      
-        parameters  = struct( 'neuron',     'tanh',...
-                              'radius',      0, ...
-                              'leakage',    0, ... 
-                              'connectivity',0,...
-                              'init_type', 'rand');            
-        W_in;
-        W_fb;
-        W_out;
-        Y_last;
-        nodes;
-       
-   end
-   %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   methods
- %First dimension is fastest varying dimension     
-      function obj = ESN(architecture, parameters)
-          obj.architecture = architecture;
-          obj.parameters = parameters;
-          obj.nodes = repmat(Neuron(parameters.neuron), architecture.numNodes, 1 );
-          obj.reservoir = Reservoir(obj.nodes, parameters);
-          obj.initialize(parameters.init_type);
-      end 
+        architectures;
+        parameters;
+    end
+   
+    methods
+      function obj = HESN(hArchitecture, hParameters, parameters)
+            for k = 1:min(size(architectures,2), size(parameters,2))
+                obj.esns(k) = esn(architectures(k), parameters(k));
+                Reservoir(nodes, parameters)
+            end
+            
+            
+            
+      end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function initialize(obj, init_type)
             rng('shuffle');
@@ -53,23 +43,22 @@ classdef ESN < handle
       end      
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function Y = generate(obj, input, gen_length, feedback_scaling)
-          Y = zeros(size(input,1), gen_length);
-          Y(:, 1) = feedback_scaling * forward(obj, input(:, 1));
+          Y = zeros(gen_length, size(input,2));
+          Y(1, :) = feedback_scaling * forward(obj, input(1, :));
           for k = 2:gen_length
-               Y(:, k) = feedback_scaling * forward(obj, Y(:, k - 1));
+               Y(k, :) = feedback_scaling * forward(obj, Y(k - 1, :));
           end
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function Y = predict(obj, input, feedback_scaling)
-          Y = zeros(size(input,1), size(input,2));
+          Y = zeros(size(input,2), size(input,1));
           for k = 1:size(u,2)
-               Y(:, k) = feedback_scaling * forward(obj, input(:, k));
+               Y(k, :) = feedback_scaling * forward(obj, input(k, :));
           end
       end      
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function error = backward(obj, x)
 
-      end
-   end
+      end        
+    end
 end
-   

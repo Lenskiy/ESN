@@ -1,25 +1,31 @@
 classdef Reservoir < handle
+    properties (SetAccess = private)
+        x_updated;
+    end
 	properties
-        neuron;
+        nodes;
         numNodes;
-        leakage;
         input_size;
         W;
         X_cur;
         X_init;
-        connectivity;
-        radius;
+        parameters  = struct( 'neuron',     'tanh',...
+                              'radius',      0, ...
+                              'leakage',    0, ... 
+                              'connectivity',0,...
+                              'init_type', 'rand'); 
    end
    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    methods
-      function obj = Reservoir(type, numNodes, radius, leakage, connectivity)
-          obj.numNodes = numNodes;
-          obj.leakage = leakage;
-          obj.radius = radius;
-          obj.connectivity = connectivity;
-          obj.X_cur = zeros(numNodes, 1);
-          obj.initialize(radius, connectivity);
-          obj.neuron = Neuron(type);
+      function obj = Reservoir(nodes, parameters)
+          obj.parameters = parameters;
+          obj.numNodes = length(nodes);
+          obj.nodes = nodes;
+          
+          obj.X_cur = zeros(obj.numNodes, 1);
+          obj.initialize(parameters.radius, parameters.connectivity);
+          
+          obj.x_updated = zeros(obj.numNodes, 1);
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function initialize(obj, radius, connectivity)
@@ -44,9 +50,11 @@ classdef Reservoir < handle
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function output = forward(obj, input)
-            x_updated = obj.neuron.forward( input + obj.W * obj.X_cur );
-            obj.X_cur = (1 - obj.leakage) * obj.X_cur...
-                        + obj.leakage * x_updated;
+          for k = 1:obj.numNodes
+            obj.x_updated(k) = obj.nodes(k).forward( input(k) + obj.W(k,:) * obj.X_cur );
+          end
+            obj.X_cur = (1 - obj.parameters.leakage) * obj.X_cur...
+                        + obj.parameters.leakage * obj.x_updated;
             output = obj.X_cur;    
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

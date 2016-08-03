@@ -1,5 +1,5 @@
 classdef Neuron < handle
-   properties
+   properties (SetAccess = private)
       actFunction = @tanh;
       derFunction = @(x) 1 - tanh(x).^2
    end
