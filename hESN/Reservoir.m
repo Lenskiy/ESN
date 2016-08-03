@@ -6,6 +6,7 @@ classdef Reservoir < handle
         input_size;
         W;
         X_cur;
+        X_init;
         connectivity;
         radius;
    end
@@ -20,7 +21,7 @@ classdef Reservoir < handle
           obj.initialize(radius, connectivity);
           obj.neuron = Neuron(type);
       end
-      
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function initialize(obj, radius, connectivity)
             rng('shuffle');
 
@@ -33,14 +34,22 @@ classdef Reservoir < handle
             maxVal = max(abs(eigs(obj.W, 1, 'lm', opts)));
             obj.W = radius * obj.W/maxVal; % normalize W
       end
-      
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      function setInitStates(obj)
+            obj.X_init = obj.X_cur;
+      end
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      function resetInitStates(obj)
+            obj.X_cur = obj.X_init;
+      end
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function output = forward(obj, input)
             x_updated = obj.neuron.forward( input + obj.W * obj.X_cur );
             obj.X_cur = (1 - obj.leakage) * obj.X_cur...
                         + obj.leakage * x_updated;
             output = obj.X_cur;    
       end
-      
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function error = backward(obj, x)
             error = obj.derFunction(x);
       end

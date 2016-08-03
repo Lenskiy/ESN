@@ -20,12 +20,11 @@ classdef Neuron < handle
          
          %obj(numNeurons) = Neuron(type, state);
       end 
-      
-      
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function X = forward(obj, X)
          X = obj.actFunction(X);
       end
-      
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function X = backward(obj, X)
         X = obj.derFunction(X);
       end
