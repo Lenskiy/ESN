@@ -6,8 +6,23 @@ train_input = mackeyglass_data(1:mid_point, :)';
 train_output = mackeyglass_data(2:mid_point + 1, :)';
 test_input = mackeyglass_data(mid_point + 1:end - 1, :)';
 test_output = mackeyglass_data(mid_point + 2:end, :)';
+%% NARMA10
+data = NARMA10series(1600);
+testp = 0.5;
+split_point = round((1-testp) * length(data)); % take testp as hold out test set
+train_input  = data(1, 1:split_point,1);
+size(train_input)
+train_output = data(2, 2:split_point + 1);
+test_input   = data(1, split_point + 1:end - 1);
+test_output  = data(2, split_point + 2:end);
+
+
+
+
 % ESN TEST
-nNodes = 1000;
+
+nNodes = 100;
+
 architecture = struct('inputDim',   size(train_input,1), ...
                       'numNodes',   nNodes, ... 
                       'outputDim',  size(train_output,1));      
@@ -18,11 +33,16 @@ parameters  = struct('node_type',      'tanh',...
                      'init_type', 'rand');  
 esn = ESN(architecture, parameters);
 train = Train();
-train.train(esn, train_input, train_output, 100) 
-Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
-%Y = esn.predict(train_input(1, :), 1);
-figure, hold on; title('Mackeyglass system');
-plot(test_input(1,:));
+
+initL = 100;
+
+train.train(esn, train_input, train_output, initL) 
+%Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
+Y = esn.predict(test_input(1, :), 1);
+
+
+figure, hold on; title('system');
+plot(test_output(1,:));
 plot(Y(1,:));
 
 

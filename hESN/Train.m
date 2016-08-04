@@ -13,6 +13,7 @@ classdef Train < handle
                 X(1:sum(esn.architecture.numNodes), j) = esn.forward(u);
             end
             X(sum(esn.architecture.numNodes) + 1:end, :) = [ones(1, size(target,2)); input];
+            
             Xinv = pseudoinverse(X(:, initLen + 1:end),[],'lsqr', 'tikhonov',...
                {@(x,r) r*normest(X)*x, 1e-4});
             esn.W_out =   target(:, initLen + 1:end) * Xinv;

@@ -44,6 +44,34 @@ plot(test_output(1,:));
 plot(Y(1,:));
 
 
+% SESN TEST
 
+sArchitecture = struct('inputDim',  size(train_input,1), ...
+                      'numNodes',   [100; 100], ... 
+                      'outputDim',  size(train_output,1));
+                   
+sParameters(1)  = struct('node_type',      'tanh',... 
+                     'radius',      0.8, ...
+                     'leakage',     0.2, ... 
+                     'connectivity',0.1,...
+                     'init_type', 'rand');  
+sParameters(2)  = struct('node_type',      'tanh',... 
+                     'radius',      0.8, ...
+                     'leakage',     0.2, ... 
+                     'connectivity',0.1,...
+                     'init_type', 'rand'); 
+                 
+sESN = StackedESN(sArchitecture, sParameters, 'rand');
+train = Train();
+train.train(sESN, train_input, train_output, 100)
+%Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
+Y = esn.predict(test_input(1, :), 1);
+
+NRMSE(Y,test_output(1,:))
+
+
+figure, hold on; title('NARMA10 test');
+plot(test_output(1,:));
+plot(Y(1,:));
 
 
