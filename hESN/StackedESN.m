@@ -73,7 +73,7 @@ classdef StackedESN < handle
           Y = zeros(size(input,1), gen_length);
           Y(:, 1) = feedback_scaling * evaluate(obj, input(:, 1));
           for k = 2:gen_length
-               Y(:, k) = feedback_scaling * forward(obj, Y(:, k - 1));
+               Y(:, k) = feedback_scaling * evaluate(obj, Y(:, k - 1));
           end
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

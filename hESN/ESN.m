@@ -24,6 +24,7 @@ classdef ESN < handle
           %obj.nodes = repmat(Neuron(parameters.neuron), architecture.numNodes, 1 );
           obj.reservoir = Reservoir(architecture.numNodes, parameters);
           obj.initialize(parameters.init_type);
+          obj.Y_last = 0;
       end 
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function initialize(obj, init_type)
@@ -71,10 +72,12 @@ classdef ESN < handle
       end      
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function setInitStates(obj)
+            Y_last = 0;
             obj.reservoir.setInitStates();
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function resetInitStates(obj)
+            Y_last = 0;
             obj.reservoir.resetInitStates();
       end
 	 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -18,11 +18,11 @@ classdef Train < handle
             esn.W_out =   target(:, initLen + 1:end) * Xinv;
             
 %             X_ = X(:, initLen + 1:end);
-%             Xinv =  X_' * inv(X_*X_' + 1e-4*eye(size(X_,1)));
-%             esn.W_out =   target(:, initLen + 1:end) * Xinv;
+%             Xinv_ =  X_' * inv(X_*X_' + 1e-4*eye(size(X_,1)));
+%             esn.W_out =   target(:, initLen + 1:end) * Xinv_;
             
             esn.setInitStates();
-            Y = esn.generate(input, size(target,1), 1);
+            Y = esn.generate(input(:, 1), size(target,2), 1);
             error = mse(obj, target, Y);
             esn.resetInitStates();
       end
