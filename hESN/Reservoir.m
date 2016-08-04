@@ -1,15 +1,15 @@
 classdef Reservoir < handle
-    properties (SetAccess = private)
-        x_updated;
-    end
+%     properties (SetAccess = private)
+%         x_updated;
+%     end
 	properties
-        nodes;
+        unit;
         numNodes;
         input_size;
         W;
         X_cur;
         X_init;
-        parameters  = struct( 'neuron',     'tanh',...
+        parameters  = struct( 'node_type',     'tanh',...
                               'radius',      0, ...
                               'leakage',    0, ... 
                               'connectivity',0,...
@@ -17,15 +17,18 @@ classdef Reservoir < handle
    end
    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    methods
-      function obj = Reservoir(nodes, parameters)
-          obj.parameters = parameters;
-          obj.numNodes = length(nodes);
-          obj.nodes = nodes;
-          
-          obj.X_cur = zeros(obj.numNodes, 1);
-          obj.initialize(parameters.radius, parameters.connectivity);
-          
-          obj.x_updated = zeros(obj.numNodes, 1);
+      function obj = Reservoir(numNodes, parameters)
+          if nargin ~= 0
+              obj(length(numNodes)) = Reservoir;
+              for k = 1:length(numNodes)
+                  obj(k).numNodes = numNodes(k);
+                  obj(k).parameters = parameters(k);
+                  obj(k).unit = Neuron(parameters(k).node_type);  
+                  obj(k).X_cur = zeros(numNodes(k), 1);
+                  obj(k).initialize(parameters(1).radius, parameters(k).connectivity);
+              end
+%           obj.x_updated = zeros(obj.numNodes, 1);
+          end
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function initialize(obj, radius, connectivity)
@@ -50,11 +53,12 @@ classdef Reservoir < handle
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function output = forward(obj, input)
-          for k = 1:obj.numNodes
-            obj.x_updated(k) = obj.nodes(k).forward( input(k) + obj.W(k,:) * obj.X_cur );
-          end
+%           for k = 1:obj.numNodes
+%             obj.x_updated(k) = obj.nodes(k).forward( input(k) + obj.W(k,:) * obj.X_cur );
+%           end
+            x_updated = obj.unit.forward( input + obj.W * obj.X_cur );
             obj.X_cur = (1 - obj.parameters.leakage) * obj.X_cur...
-                        + obj.parameters.leakage * obj.x_updated;
+                        + obj.parameters.leakage * x_updated;
             output = obj.X_cur;    
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
