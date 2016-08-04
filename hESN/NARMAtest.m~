@@ -1,6 +1,7 @@
 %% NARMA training/testing data
 
 data = NARMA10series(1600);
+size(data)
 
 testp = 0.5;
 
@@ -14,6 +15,7 @@ test_input   = data(1, split_point + 1:end - 1);
 test_output  = data(2, split_point + 2:end);
 
 
+size(test_input)
 
 % ESN TEST
 
@@ -29,15 +31,12 @@ parameters  = struct('node_type',      'tanh',...
                      'init_type', 'rand');  
 esn = ESN(architecture, parameters);
 train = RRTrain();
-
-initL = 100;
-
-train.train(esn, train_input, train_output, initL); 
+initL =
+train.train(esn, train_input, train_output, 100) 
 %Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
-Y = esn.predict(test_input(1, :), 1);
+Y = esn.predict(train_input(1, :), 1);
 
-size(Y)
-size(test_output)
+
 
 figure, hold on; title('NARMA10 test');
 plot(test_output(1,:));
