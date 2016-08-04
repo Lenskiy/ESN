@@ -1,9 +1,9 @@
-classdef RRTrain < handle
+classdef LTrain < handle
     properties
     end
    
     methods
-        function obj = RRTrain()
+        function obj = LTrain()
         end
         %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         function [error] = train(obj, esn, input, target, initLen)
@@ -16,8 +16,12 @@ classdef RRTrain < handle
           
             
             X_ = X(:, initLen + 1:end);
-            Xinv_ =  X_' * inv(X_*X_' + 0.001*eye(size(X_,1)));
-            esn.W_out =   target(:, initLen + 1:end) * Xinv_;
+            
+            L = lasso(X_,target(initLen + 1:end, :),'Alpha',0.0001,'Lambda',[0.0001])';
+
+           
+            
+            esn.W_out = L;
             
             esn.setInitStates();
             Y = esn.generate(input(:, 1), size(target,2), 1);
