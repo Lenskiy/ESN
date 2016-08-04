@@ -28,7 +28,7 @@ parameters  = struct('node_type',      'tanh',...
                      'connectivity',0.1,...
                      'init_type', 'rand');  
 esn = ESN(architecture, parameters);
-train = RRTrain();
+train = Train();
 
 initL = 100;
 
@@ -36,8 +36,8 @@ train.train(esn, train_input, train_output, initL);
 %Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
 Y = esn.predict(test_input(1, :), 1);
 
-size(Y)
-size(test_output)
+NRMSE(Y,test_output(1,:))
+
 
 figure, hold on; title('NARMA10 test');
 plot(test_output(1,:));
