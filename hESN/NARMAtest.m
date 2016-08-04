@@ -1,4 +1,4 @@
-%% NARMA training/testing data
+%% NARMA training/testing data INIT
 
 data = NARMA10series(1600);
 
@@ -13,7 +13,7 @@ test_output  = data(2, split_point + 2:end);
 
 
 
-% ESN TEST
+%% ESN TEST
 
 nNodes = 100;
 
@@ -43,7 +43,7 @@ plot(test_output(1,:));
 plot(Y(1,:));
 
 
-% SESN TEST
+%% SESN TEST
 
 sArchitecture = struct('inputDim',  size(train_input,1), ...
                       'numNodes',   [100; 100], ... 
@@ -55,14 +55,14 @@ sParameters(1)  = struct('node_type',      'tanh',...
                      'connectivity',0.1,...
                      'init_type', 'rand');  
 sParameters(2)  = struct('node_type',      'tanh',... 
-                     'radius',      0.8, ...
-                     'leakage',     0.2, ... 
-                     'connectivity',0.1,...
+                     'radius',      0.2, ...
+                     'leakage',     0.5, ... 
+                     'connectivity',0.05,...
                      'init_type', 'rand'); 
                  
 sESN = StackedESN(sArchitecture, sParameters, 'rand');
 train = RRTrain();
-train.train(sESN, train_input, train_output, 100)
+train.train(sESN, train_input, train_output, 100);
 %Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
 Y = esn.predict(test_input(1, :), 1);
 
