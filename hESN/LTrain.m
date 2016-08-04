@@ -21,15 +21,18 @@ classdef LTrain < handle
             
             L = lasso(X_',Y_','Alpha',0.1,'Lambda',[0.1]);
 
+            %L(abs(L)<3)=0; 
             
             %L = X_'\Y_';
-            
+           
+           
             esn.W_out = L';
             
             esn.setInitStates();
             Y = esn.generate(input(:, 1), size(target,2), 1);
             error = mse(obj, target, Y);
             esn.resetInitStates();
+            
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function error = mse(obj, x, y)

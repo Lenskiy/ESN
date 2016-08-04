@@ -31,10 +31,11 @@ train = LTrain();
 
 initL = 100;
 
+tic()
 train.train(esn, train_input, train_output, initL); 
 %Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
 Y = esn.predict(test_input(1, :), 1);
-
+toc()
 NRMSE(Y,test_output(1,:))
 
 
