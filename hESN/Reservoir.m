@@ -25,14 +25,14 @@ classdef Reservoir < handle
                   obj(k).parameters = parameters(k);
                   obj(k).unit = Neuron(parameters(k).node_type);  
                   obj(k).X_cur = zeros(numNodes(k), 1);
-                  obj(k).initialize(parameters(1).radius, parameters(k).connectivity);
+                  obj(k).initW(parameters(1).radius, parameters(k).connectivity);
               end
 %           obj.x_updated = zeros(obj.numNodes, 1);
           end
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      function initialize(obj, radius, connectivity)
-            rng('shuffle');
+      function initW(obj, radius, connectivity)
+            %rng('shuffle');
 
             % generate connecting weight in reservoir
             obj.W = sprand(obj.numNodes, obj.numNodes, connectivity);
@@ -42,6 +42,10 @@ classdef Reservoir < handle
             opts.tol = 1e-3;
             maxVal = max(abs(eigs(obj.W, 1, 'lm', opts)));
             obj.W = radius * obj.W/maxVal; % normalize W
+      end
+      %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      function setStates(obj, X)
+            obj.X_cur = X;
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function setInitStates(obj)
