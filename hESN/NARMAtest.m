@@ -61,7 +61,7 @@ sParameters(2)  = struct('node_type',      'tanh',...
                      'init_type', 'rand'); 
                  
 sESN = StackedESN(sArchitecture, sParameters, 'rand');
-train = Train();
+train = RRTrain();
 train.train(sESN, train_input, train_output, 100)
 %Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
 Y = esn.predict(test_input(1, :), 1);
