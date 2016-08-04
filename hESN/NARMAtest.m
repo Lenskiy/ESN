@@ -31,9 +31,10 @@ parameters  = struct('node_type',      'tanh',...
 esn = ESN(architecture, parameters);
 train = Train();
 train.train(esn, train_input, train_output, 100) 
-%Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
-Y = esn.predict(train_input(1, :), 1);
-dim(Y)
+Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
+%Y = esn.predict(train_input(1, :), 1);
+
+
 
 figure, hold on; title('NARMA10 test');
 plot(test_input(1,:));
