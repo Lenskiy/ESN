@@ -27,7 +27,7 @@ parameters  = struct('node_type',      'tanh',...
                      'init_type', 'rand');  
 esn = ESN(architecture, parameters);
 
-train = RRTrain();
+train = LTrain();
 
 initL = 100;
 
