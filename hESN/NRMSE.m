@@ -1,4 +1,4 @@
-function [ E ] = RMSE( in1, in2 )
+function [ E ] = NRMSE( in1, in2 )
 % Calculates NRMSE
 % in1: prediction, in2: target
     
