@@ -14,13 +14,10 @@ classdef RRTrain < handle
             end
             X(sum(esn.architecture.numNodes) + 1:end, :) = [ones(1, size(target,2)); input];
           
-            Xinv = pseudoinverse(X(:, initLen + 1:end),[],'lsqr', 'tikhonov',...
-               {@(x,r) r*normest(X)*x, 1e-4});
-            esn.W_out =   target(:, initLen + 1:end) * Xinv;
             
-            % X_ = X(:, initLen + 1:end);
-            % Xinv_ =  X_' * inv(X_*X_' + 8*eye(size(X_,1)));
-            % esn.W_out =   target(:, initLen + 1:end) * Xinv_;
+            X_ = X(:, initLen + 1:end);
+            Xinv_ =  X_' * inv(X_*X_' + 0.01*eye(size(X_,1)));
+            esn.W_out =   target(:, initLen + 1:end) * Xinv_;
             
             esn.setInitStates();
             Y = esn.generate(input(:, 1), size(target,2), 1);

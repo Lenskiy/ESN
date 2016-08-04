@@ -7,8 +7,6 @@ testp = 0.5;
 split_point = round((1-testp) * length(data)); % take testp as hold out test set
 
 train_input  = data(1, 1:split_point,1);
-size(train_input)
-
 train_output = data(2, 2:split_point + 1);
 test_input   = data(1, split_point + 1:end - 1);
 test_output  = data(2, split_point + 2:end);
@@ -28,7 +26,8 @@ parameters  = struct('node_type',      'tanh',...
                      'connectivity',0.1,...
                      'init_type', 'rand');  
 esn = ESN(architecture, parameters);
-train = Train();
+
+train = RRTrain();
 
 initL = 100;
 
