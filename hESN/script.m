@@ -18,7 +18,7 @@ test_output  = data(2, split_point + 2:end);
 
 
 %% ESN TEST
-architecture = struct('inputDim',   size(train_input,1), 'numNodes',   400, 'outputDim',  size(train_output,1));      
+architecture = struct('inputDim',   size(train_input,1), 'numNodes',   40, 'outputDim',  size(train_output,1));      
 parameters  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'rand');  
 parameters  = struct('node_type','tanh', 'radius', 0.2,'leakage', 0.5, 'connectivity',0.1, 'init_type', 'rand');
 parameters  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand');
@@ -61,17 +61,17 @@ plot(test_output(1,:));
 plot(Y(1,:));
 
 %% Hierarhical ESNs TEST
-sArchitecture = struct('inputDim',  size(train_input,1), 'numNodes',   [100; 100; 100; 100], 'outputDim',  size(train_output,1));
+sArchitecture = struct('inputDim',  size(train_input,1), 'numNodes',   [10; 10; 10; 10], 'outputDim',  size(train_output,1));
 % Paramteres of the top reservoir                 
 hParameters  = struct('radius', 0.3, 'leakage',     0.0, 'connectivity',0.1, 'init_type', 'rand');
 % Paramteres of the reservoirs                
 sParameters(1)  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'rand');
 sParameters(2)  = struct('node_type','tanh', 'radius', 0.2,'leakage', 0.5, 'connectivity',0.1, 'init_type', 'rand');
 sParameters(3)  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand');
-sParameters(4)  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand')
-%sParameters(4)  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand'); 
+%sParameters(4)  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand')
+sParameters(4)  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand'); 
 hESN = HESN(sArchitecture, hParameters, sParameters);
-train = Train();
+train = RRTrain();
 [err, states]= train.train(hESN, train_input, train_output, 100);err
 
 %Y = hESN.generate(test_input(1, :), size(test_output(1,:),2), 1);
