@@ -7,8 +7,8 @@ train_output = mackeyglass_data(:, 2:mid_point + 1);
 test_input = mackeyglass_data(:, mid_point + 1:end - 1);
 test_output = mackeyglass_data(:, mid_point + 2:end);
 %% NARMA10
-data = NARMA10series(2300);
-testp = 0.5;
+data = NARMA100LTdepOnly(5000);
+testp = 0.2;
 split_point = round((1-testp) * length(data)); % take testp as hold out test set
 train_input  = data(1, 1:split_point,1);
 size(train_input)
@@ -62,7 +62,7 @@ plot(test_output(1,:));
 plot(Y(1,:));
 
 %% Hierarhical ESNs TEST
-sArchitecture = struct('inputDim',  size(train_input,1), 'numNodes',   [5; 5; 5; 5], 'outputDim',  size(train_output,1));
+sArchitecture = struct('topology', 'rand', 'inputDim',  size(train_input,1), 'numNodes',   [5; 5; 5; 5], 'outputDim',  size(train_output,1));
 % Paramteres of the top reservoir                 
 hParameters  = struct('radius', 0.3, 'leakage',     0.5, 'connectivity',0.00, 'init_type', 'rand');
 % Paramteres of the reservoirs                
