@@ -1,6 +1,6 @@
 classdef HESN < handle
     properties (SetAccess = private)
-        X_temp;
+        X_last;
         totalStates;
     end
     properties
@@ -36,7 +36,7 @@ classdef HESN < handle
             obj.reservoirs = Reservoir(sArchitecture.numNodes, sParameters);
 
             obj.totalStates = sum(sArchitecture.numNodes);
-            obj.X_temp = zeros(obj.totalStates,1);
+            obj.X_last = zeros(obj.totalStates,1);
             obj.initialize();
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,7 +44,7 @@ classdef HESN < handle
             %rng('shuffle');
             initWin(obj, obj.hParameters.init_type);
             initWfb(obj, obj.hParameters.init_type);
-            initW(obj, obj.hParameters.init_type);
+            initW(obj, obj.hParameters.init_type, obj.architecture.topology);
             obj.Y_last = 0;
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -74,10 +74,9 @@ classdef HESN < handle
             end      
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      function initW(obj, init_type)
+      function initW(obj, init_type, topology)
             %rng('shuffle');
             % generate connecting weight in reservoir
-            
             switch (init_type)
                 case 'rand'
                     obj.W = sprand(obj.totalStates, obj.totalStates, obj.hParameters.connectivity);
@@ -85,7 +84,14 @@ classdef HESN < handle
                 case 'randn'
                     obj.W = sprandn(obj.totalStates, obj.totalStates, obj.hParameters.connectivity);
             end
-            
+            % set to zeros those elements that correspond internal weights
+            % of each reservoir
+            index = 0;
+            for k = 1:length(obj.architecture.numNodes)
+                obj.W(index+1:index + obj.architecture.numNodes(k),...
+                    index+1:index + obj.architecture.numNodes(k)) = 0;
+                index = index + obj.architecture.numNodes(k);
+            end
             % compute spectral radius i.e. the largest absolute eigen value 
             opts.tol = 1e-3;
             maxVal = max(abs(eigs(obj.W, 1, 'lm', opts)));
@@ -99,22 +105,22 @@ classdef HESN < handle
       function X = forward(obj, u) % Calculates next step of the system
           %Run each reservoir separately 
           index = 0;
-          X_prev = obj.X_temp;
+          X_prev = obj.X_last;
           for k = 1:length(obj.architecture.numNodes) % collect states from all reservoirs
-             obj.X_temp(index+1:index + obj.architecture.numNodes(k)) =...
+             obj.X_last(index+1:index + obj.architecture.numNodes(k)) =...
                  obj.reservoirs(k).forward(obj.W_in{k} * [1; u] + obj.W_fb{k} * obj.Y_last...
                  + obj.W(index+1:index + obj.architecture.numNodes(k), :) * X_prev);
              index = index + obj.architecture.numNodes(k);
           end
           
-          obj.X_temp = (1 - obj.hParameters.leakage) * obj.X_temp +...
-                                    obj.hParameters.leakage * X_prev;
+          obj.X_last = (1 - obj.hParameters.leakage) * X_prev  +...
+                                    obj.hParameters.leakage * obj.X_last;
 %           index = 0;                      
 %           for k = 1:length(obj.architecture.numNodes) % collect states from all reservoirs
-%              obj.reservoirs(k).setStates(obj.X_temp(index+1:index + obj.architecture.numNodes(k)));
+%              obj.reservoirs(k).setStates(obj.X_last(index+1:index + obj.architecture.numNodes(k)));
 %              index = index + obj.architecture.numNodes(k);
 %           end
-          X = obj.X_temp;
+          X = obj.X_last;
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function y = evaluate(obj, u) % Evaluates output the system
