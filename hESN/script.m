@@ -18,7 +18,7 @@ test_output  = data(2, split_point + 2:end);
 
 
 %% ESN TEST
-architecture = struct('inputDim',   size(train_input,1), 'numNodes',   100, 'outputDim',  size(train_output,1));      
+architecture = struct('inputDim',   size(train_input,1), 'numNodes',   400, 'outputDim',  size(train_output,1));      
 parameters  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'rand');  
 parameters  = struct('node_type','tanh', 'radius', 0.2,'leakage', 0.5, 'connectivity',0.1, 'init_type', 'rand');
 parameters  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand');
@@ -68,7 +68,8 @@ hParameters  = struct('radius', 0.3, 'leakage',     0.0, 'connectivity',0.1, 'in
 sParameters(1)  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'rand');
 sParameters(2)  = struct('node_type','tanh', 'radius', 0.2,'leakage', 0.5, 'connectivity',0.1, 'init_type', 'rand');
 sParameters(3)  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand');
-sParameters(4)  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand');                        
+sParameters(4)  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand')
+%sParameters(4)  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand'); 
 hESN = HESN(sArchitecture, hParameters, sParameters);
 train = Train();
 [err, states]= train.train(hESN, train_input, train_output, 100);err
@@ -82,9 +83,9 @@ figure,
 subplot(2,1,1), hold on
 axis([1,size(states,2), -1, 1])
 d1 = plot(1:size(states,2), states(1:sArchitecture.numNodes(1),:)','r');
-d2 = plot(1:size(states,2), states(sArchitecture.numNodes(1)+1:end,:)','g');
-d3 = plot(1:size(states,2), states(sArchitecture.numNodes(1)+sArchitecture.numNodes(2)+1:end,:)','b');
-d4 = plot(1:size(states,2), states(sArchitecture.numNodes(1)+sArchitecture.numNodes(2)+sArchitecture.numNodes(3)+1:end,:)','k');
+d2 = plot(1:size(states,2), states(sArchitecture.numNodes(1) + 1:sum(sArchitecture.numNodes(1:2)),:)','g');
+d3 = plot(1:size(states,2), states(sum(sArchitecture.numNodes(1:2)) + 1:sum(sArchitecture.numNodes(1:3)),:)','b');
+d4 = plot(1:size(states,2), states(sum(sArchitecture.numNodes(1:3)) + 1:end,:)','k');
 title('States during the learning stage')
 legend([d1(1), d2(1), d3(1), d4(1)],['\rho_1 = ', num2str(sParameters(1).radius), '  l_1 = ', num2str(sParameters(1).radius)],...
                       ['\rho_2 = ', num2str(sParameters(2).radius), '  l_2 = ', num2str(sParameters(2).leakage)],...
