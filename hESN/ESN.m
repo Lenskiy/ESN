@@ -47,7 +47,9 @@ classdef ESN < handle
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function X_cur = forward(obj, u)
-            X_cur = obj.reservoir.forward(obj.W_in * [1; u] + obj.W_fb * obj.Y_last);
+            
+          %  X_cur = obj.reservoir.forward(obj.W_in * [1; u] + obj.W_fb * obj.Y_last);
+           X_cur = obj.reservoir.forward(obj.W_in * [1; u]);
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function y = evaluate(obj, u)
