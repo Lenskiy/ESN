@@ -5,7 +5,7 @@ function resI = generateProjections(I, theta_, phi_, ksi_)
        -sin(theta) sin(phi)*cos(theta) cos(phi)*cos(theta)];
 
     %If you want to make deformation stronger, reduce foc_len
-    foc_len = (size(I,1 ) + size(I,2))/10; 
+    foc_len = (size(I,1 ) + size(I,2))/5; 
     %Initialize camera matrix
     CamMat = [foc_len 0 size(I,1)/2; 0 foc_len size(I,2)/2; 0 0 1];
     counter = 1;
