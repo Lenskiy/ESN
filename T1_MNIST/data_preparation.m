@@ -1,11 +1,11 @@
 %% Load MNIST dataset
 mnisttrain = importdata('./mnist_train.csv',',');
 mnisttest = importdata('./mnist_test.csv', ',');
-train_input = mnisttrain(:,2:end);
-train_output = mnisttrain(:,1);
-test_input = mnisttest(:,2:end);
-test_output = mnisttest(:,1);
-trainSize = size(train_input,1);
+train_input = mnisttrain(:,2:end)';
+train_output = mnisttrain(:,1)';
+test_input = mnisttest(:,2:end)';
+test_output = mnisttest(:,1)';
+trainSize = size(train_input,2);
 
 %% Take an image and deform it using projective transformation
 theta = [-5:5:5];
