@@ -34,6 +34,7 @@ for j = 1:size(train_input,2)
         counter = counter + 1;
     end
 end
+
 mnisttrain_ext = [train_output_ext; train_input_ext]';
 csvwrite('./mnist_train_ext.csv', mnisttrain_ext);
 
