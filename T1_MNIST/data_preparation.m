@@ -1,6 +1,6 @@
 %% Load MNIST dataset
-mnisttrain = importdata('./mnist_train.csv',',');
-mnisttest = importdata('./mnist_test.csv', ',');
+mnisttrain = importdata('./mnistCSV/mnist_train.csv',',');
+mnisttest = importdata('./mnistCSV/mnist_test.csv', ',');
 train_input = mnisttrain(:,2:end)';
 train_output = mnisttrain(:,1)';
 test_input = mnisttest(:,2:end)';
