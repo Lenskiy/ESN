@@ -35,8 +35,11 @@ classdef Network < handle
             obj.blocksInds(id, :) = [size(obj.W,1) + 1, size(obj.W,1) + numNodes];
             obj.W(end+1:end+numNodes,end+1:end+numNodes) = 0;
             obj.x = [obj.x; zeros(numNodes, 1)];
-            for k = 1 + length(obj.actFuncs): numNodes + length(obj.actFuncs)
-                obj.actFuncs{k} = eval(nodeType);
+            switch(nodeType)
+                case 'linear'
+                    obj.actFuncs{id} = @(x) (x);
+                case 'tanh'
+                    obj.actFuncs{id} = @(x) tanh(x);
             end
             obj.initLayer(id);
         end
@@ -135,8 +138,7 @@ classdef Network < handle
       %-------------------------------------------------------------------------------------
       function x = forward(obj, u) % Calculates next step of the system
           obj.setInput(u);
-          obj.x = obj.W * obj.x;
-          obj.activate();
+          obj.x = obj.activate(obj.W * obj.x);
           x = obj.x;
       end
       %-------------------------------------------------------------------------------------
@@ -148,9 +150,11 @@ classdef Network < handle
         obj.x(obj.blocksInds(1, 1):obj.blocksInds(1, 2)) = u;
       end
       %-------------------------------------------------------------------------------------
-      function activate(obj)
-        for k = 1:length(obj.x)
-            obj.x(k) = obj.actFuncs{k}(obj.x(k));
+      function x = activate(obj, x)
+        for k = 1:length(obj.layerIDList)
+            id = obj.layerIDList(k);
+            inds = obj.blocksInds(id,1):obj.blocksInds(id,2);
+            x(inds) = obj.actFuncs{id}(x(inds));
         end
       end
     end
