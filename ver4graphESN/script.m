@@ -10,16 +10,18 @@ test_output = mackeyglass_data(:, mid_point + 2:end);
 
 %% Building network
 net = Network();
-net.addLayer(1,  1, 'input',  'linear', []);
-net.addLayer(2,  1, 'output', 'linear', []);
-net.addLayer(3, 2000, 'reservoir', 'tanh', struct('radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'randn'));
-net.addLayer(4, 2000, 'reservoir', 'tanh', struct('radius', 0.2,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'randn'));
-net.addLayer(5, 2000, 'reservoir', 'tanh', struct('radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'randn'));
+lID(1) = net.addLayer(1, 'input', struct('node', 'linear'));
+lID(2) = net.addLayer(1, 'output', struct('node', 'linear'));
+lID(3) = net.addLayer(2000, 'reservoir', struct('node', 'tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'randn'));
+lID(4) = net.addLayer(2000, 'reservoir', struct('node', 'tanh', 'radius', 0.2,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'randn'));
+lID(5) = net.addLayer(2000, 'reservoir', struct('node', 'tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'randn'));
+
 connections = [1.0, 1.0, 0.1, 0.1, 0.1, 0.1];
-arch = sparse([1 5 3 4 2 3],...
-              [3 2 4 5 3 5], connections,5,5);
+arch = sparse([lID(1) lID(5) lID(3) lID(4) lID(2) lID(3)],...
+              [lID(3) lID(2) lID(4) lID(5) lID(3) lID(5)], connections,5,5);
 net.setConnections(arch, 'randn');
-net.visualize();
+net.removeLayer(lID(4));
+%net.visualize();
 
 %% Testing the network
 tic

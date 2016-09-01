@@ -5,43 +5,59 @@ classdef Network < handle
        blocksInds;
        x;
        layers;
-       layerIDList;
-       layersCount;
        actFuncs
     end
     
     properties
     end
-    
+    % add methods to work with linked links
     methods
         function obj = Network()
-            obj.layerIDList = [];
-            obj.layersCount = 0;
             networkArchitecture(1,1) = struct('type', [], 'connectivity', []);
             obj.networkArchitecture = networkArchitecture;
             obj.W = sparse([]);
             obj.x = [];
-            %obj.actFuncs{1} = [];
+            obj.layers = [];
         end
         %------------------------------------------------------------------------------------
-        function addLayer(obj, id,  numNodes, layerType,  nodeType, params)
-            if(sum(ismember(obj.layerIDList,id)) ~= 0)
-                disp(['The layer with id = ', num2str(id), ' already exist.']);
-                return;
+        function id = addLayer(obj,  numNodes, layerType, params)
+            if(isempty(obj.layers))
+                id = 1;
+            else
+                id = obj.layers{end}.id + 1;
             end
-            obj.layerIDList = [obj.layerIDList, id];
-            obj.layersCount = obj.layersCount + 1;
-            obj.layers{id} = struct('numNodes', numNodes, 'layerType', layerType, 'nodeType', nodeType, 'params', params);
             obj.blocksInds(id, :) = [size(obj.W,1) + 1, size(obj.W,1) + numNodes];
             obj.W(end+1:end+numNodes,end+1:end+numNodes) = 0;
+            obj.layers{id}  = (struct('id', id,...
+                                    'numNodes', numNodes,...
+                                    'layerType', layerType,... 
+                                    'params', params));
+
             obj.x = [obj.x; zeros(numNodes, 1)];
-            switch(nodeType)
+            switch(params.node)
                 case 'linear'
-                    obj.actFuncs{id} = @(x) (x);
+                    obj.layers{id}.actFunc = @(x) (x);
                 case 'tanh'
-                    obj.actFuncs{id} = @(x) tanh(x);
+                    obj.layers{id}.actFunc = @(x) tanh(x);
             end
             obj.initLayer(id);
+        end
+        %------------------------------------------------------------------------------------
+        function removeLayer(obj,  id) % broken, lot of works needs to be done
+            for k = 1:length(obj.layers)
+                if(obj.layers{k}.id == id)
+                    obj.layers(k:end - 1) = obj.layers(k+1:end);
+                    obj.layers(end) = [];
+                    inds = obj.blocksInds(id, :);
+                    obj.blocksInds(id, :) = [0, 0];
+                    obj.W(inds, :) = 0;
+                    obj.W(:, inds) = 0;
+                    % remove connections in networkArchitecture
+                    obj.networkArchitecture(id, :) = struct('type', [], 'connectivity', []);
+                    obj.networkArchitecture(:, id) = struct('type', [], 'connectivity', []);
+                    break;
+                end
+            end
         end
         %------------------------------------------------------------------------------------
         function setConnections(obj, arch, type)
@@ -102,18 +118,18 @@ classdef Network < handle
             conMat = obj.getConnectivityMatrix();
             graph = biograph(conMat);
             graph.ArrowSize = 5;
-            for k = 1:obj.layersCount
+            for k = 1:length(obj.layers)
                 if(strcmp(obj.layers{k}.layerType, 'input') || strcmp(obj.layers{k}.layerType,'output'))
-                    graph.Nodes(k).Color = [0.7 0.7 0.5];
+                    graph.Nodes(obj.layers{k}.id).Color = [0.7 0.7 0.5];
                 end
                 if(strcmp(obj.layers{k}.layerType, 'reservoir'))
-                    graph.Nodes(k).shape = 'circle';
-                    graph.Nodes(k).LineWidth = 10 * obj.layers{k}.params.connectivity;
+                    graph.Nodes(obj.layers{k}.id).shape = 'circle';
+                    graph.Nodes(obj.layers{k}.id).LineWidth = 10 * obj.layers{k}.params.connectivity;
                     numIntStates = obj.blocksInds(end,end) -  obj.blocksInds(2,end);
-                    graph.Nodes(k).Size = round(80 * [obj.layers{k}.numNodes; obj.layers{k}.numNodes]/numIntStates) + 20;
+                    graph.Nodes(obj.layers{k}.id).Size = round(80 * [obj.layers{k}.numNodes; obj.layers{k}.numNodes]/numIntStates) + 20;
                 end
                 
-                graph.Nodes(k).Label = [num2str(obj.layerIDList(k)), ':',obj.layers{k}.layerType];
+                 graph.Nodes(obj.layers{k}.id).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType];
                 
             end
             
@@ -151,11 +167,22 @@ classdef Network < handle
       end
       %-------------------------------------------------------------------------------------
       function x = activate(obj, x)
-        for k = 1:length(obj.layerIDList)
-            id = obj.layerIDList(k);
+        for k = 1:length(obj.layers)
+            id = obj.layers{k}.id;
             inds = obj.blocksInds(id,1):obj.blocksInds(id,2);
-            x(inds) = obj.actFuncs{id}(x(inds));
+            x(inds) = obj.layers{k}.actFunc(x(inds)); %this part a bit slows down
         end
+      end
+      %-------------------------------------------------------------------------------------
+      function W = getWeights(id)
+          W = [];
+          for k = 1:length(obj.layers)
+            if(obj.layers{k}.id == id)
+                W = obj.W(obj.blocksInds(id,1):obj.blocksInds(id,2), :);
+                break;
+            end
+          end
+          
       end
     end
 end
