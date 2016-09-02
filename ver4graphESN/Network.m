@@ -6,6 +6,7 @@ classdef Network < handle
        x;
        layers;
        actFuncs
+       IDs;
     end
     
     properties
@@ -18,6 +19,7 @@ classdef Network < handle
             obj.W = sparse([]);
             obj.x = [];
             obj.layers = [];
+            obj.IDs = [];
         end
         %------------------------------------------------------------------------------------
         function id = addLayer(obj,  numNodes, layerType, params)
@@ -26,9 +28,11 @@ classdef Network < handle
             else
                 id = obj.layers{end}.id + 1;
             end
-            obj.blocksInds(id, :) = [size(obj.W,1) + 1, size(obj.W,1) + numNodes];
+            obj.IDs = [obj.IDs id];
+            ind = length(obj.IDs);
+            obj.blocksInds(ind, :) = [size(obj.W,1) + 1, size(obj.W,1) + numNodes];
             obj.W(end+1:end+numNodes,end+1:end+numNodes) = 0;
-            obj.layers{id}  = (struct('id', id,...
+            obj.layers{ind}  = (struct('id', id,...
                                     'numNodes', numNodes,...
                                     'layerType', layerType,... 
                                     'params', params));
@@ -36,28 +40,32 @@ classdef Network < handle
             obj.x = [obj.x; zeros(numNodes, 1)];
             switch(params.node)
                 case 'linear'
-                    obj.layers{id}.actFunc = @(x) (x);
+                    obj.layers{ind}.actFunc = @(x) (x);
                 case 'tanh'
-                    obj.layers{id}.actFunc = @(x) tanh(x);
+                    obj.layers{ind}.actFunc = @(x) tanh(x);
             end
-            obj.initLayer(id);
+            obj.initLayer(ind);
+            
+            obj.networkArchitecture(ind, ind) = struct('type', [], 'connectivity', []);
         end
         %------------------------------------------------------------------------------------
         function removeLayer(obj,  id) % broken, lot of works needs to be done
-            for k = 1:length(obj.layers)
-                if(obj.layers{k}.id == id)
-                    obj.layers(k:end - 1) = obj.layers(k+1:end);
+                    ind = find(obj.IDs == id);
+                    obj.IDs(ind) = [];
+                    obj.layers(ind:end - 1) = obj.layers(ind+1:end);
                     obj.layers(end) = [];
-                    inds = obj.blocksInds(id, :);
-                    obj.blocksInds(id, :) = [0, 0];
-                    obj.W(inds, :) = 0;
-                    obj.W(:, inds) = 0;
+                    inds = obj.blocksInds(ind, :);
+                    if(ind < size(obj.blocksInds,1))
+                        obj.blocksInds(ind + 1, :) = obj.blocksInds(ind , 1) + obj.blocksInds(ind + 1:end, :) - obj.blocksInds(ind , 2) - 1;
+                    end
+                    obj.blocksInds(ind, :) = [];
+                    obj.W(inds(1):inds(2), :) = [];
+                    obj.W(:, inds(1):inds(2)) = [];
+                    obj.x(inds(1):inds(2)) = [];
                     % remove connections in networkArchitecture
-                    obj.networkArchitecture(id, :) = struct('type', [], 'connectivity', []);
-                    obj.networkArchitecture(:, id) = struct('type', [], 'connectivity', []);
-                    break;
-                end
-            end
+                    obj.networkArchitecture(ind, :) = [];
+                    obj.networkArchitecture(:, ind) = [];
+                    
         end
         %------------------------------------------------------------------------------------
         function setConnections(obj, arch, type)
@@ -69,9 +77,11 @@ classdef Network < handle
         end
         %------------------------------------------------------------------------------------
         function setConnection(obj, sourceId, destId, params)
-            obj.networkArchitecture(sourceId, destId) = params;
-            srcInds = obj.blocksInds(sourceId,1):obj.blocksInds(sourceId,2);
-            destInds = obj.blocksInds(destId,1):obj.blocksInds(destId,2);
+            srcInd = find(obj.IDs == sourceId);
+            dstInd = find(obj.IDs == destId);
+            obj.networkArchitecture(srcInd, dstInd) = params;
+            srcInds = obj.blocksInds(srcInd,1):obj.blocksInds(srcInd,2);
+            destInds = obj.blocksInds(dstInd, 1):obj.blocksInds(dstInd, 2);
             switch params.type
                 case 'rand'
                     W = sprand(length(srcInds), length(destInds), params.connectivity);
@@ -118,18 +128,19 @@ classdef Network < handle
             conMat = obj.getConnectivityMatrix();
             graph = biograph(conMat);
             graph.ArrowSize = 5;
+
             for k = 1:length(obj.layers)
                 if(strcmp(obj.layers{k}.layerType, 'input') || strcmp(obj.layers{k}.layerType,'output'))
                     graph.Nodes(obj.layers{k}.id).Color = [0.7 0.7 0.5];
                 end
                 if(strcmp(obj.layers{k}.layerType, 'reservoir'))
-                    graph.Nodes(obj.layers{k}.id).shape = 'circle';
-                    graph.Nodes(obj.layers{k}.id).LineWidth = 10 * obj.layers{k}.params.connectivity;
-                    numIntStates = obj.blocksInds(end,end) -  obj.blocksInds(2,end);
-                    graph.Nodes(obj.layers{k}.id).Size = round(80 * [obj.layers{k}.numNodes; obj.layers{k}.numNodes]/numIntStates) + 20;
+                    graph.Nodes(k).shape = 'circle';
+                    graph.Nodes(k).LineWidth = 10 * obj.layers{k}.params.connectivity;
+                    numIntStates = obj.blocksInds(end,end) -  obj.blocksInds(2,end); % *needs take into account deleted layers
+                    graph.Nodes(k).Size = round(80 * [obj.layers{k}.numNodes; obj.layers{k}.numNodes]/numIntStates) + 20;
                 end
                 
-                 graph.Nodes(obj.layers{k}.id).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType];
+                 graph.Nodes(k).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType];
                 
             end
             
@@ -168,8 +179,8 @@ classdef Network < handle
       %-------------------------------------------------------------------------------------
       function x = activate(obj, x)
         for k = 1:length(obj.layers)
-            id = obj.layers{k}.id;
-            inds = obj.blocksInds(id,1):obj.blocksInds(id,2);
+            ind = find(obj.layers{k}.id == obj.IDs); %% could be speeded up
+            inds = obj.blocksInds(ind,1):obj.blocksInds(ind,2);
             x(inds) = obj.layers{k}.actFunc(x(inds)); %this part a bit slows down
         end
       end
