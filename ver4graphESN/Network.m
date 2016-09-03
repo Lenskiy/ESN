@@ -5,7 +5,8 @@ classdef Network < handle
        blocksInds;
        x;
        layers;
-       actFuncs
+       actFuncs;
+       leakage;
        IDs;
     end
     
@@ -38,19 +39,15 @@ classdef Network < handle
                                     'params', params));
 
             obj.x = [obj.x; zeros(numNodes, 1)];
-            switch(params.node)
-                case 'linear'
-                    obj.layers{ind}.actFunc = @(x) (x);
-                case 'tanh'
-                    obj.layers{ind}.actFunc = @(x) tanh(x);
-            end
+            obj.leakage = [obj.leakage; params.leakage * ones(numNodes, 1)];
+            obj.setActiveFn(ind, params.nodeType);
             obj.initLayer(ind);
             
             obj.networkArchitecture(ind, ind) = struct('type', [], 'connectivity', []);
         end
         %------------------------------------------------------------------------------------
         function removeLayer(obj,  id) % broken, lot of works needs to be done
-                    ind = find(obj.IDs == id);
+                    ind = find(obj.IDs == id); % could be speeded up
                     obj.IDs(ind) = [];
                     obj.layers(ind:end - 1) = obj.layers(ind+1:end);
                     obj.layers(end) = [];
@@ -62,10 +59,96 @@ classdef Network < handle
                     obj.W(inds(1):inds(2), :) = [];
                     obj.W(:, inds(1):inds(2)) = [];
                     obj.x(inds(1):inds(2)) = [];
+                    obj.leakage(inds(1):inds(2)) = [];
                     % remove connections in networkArchitecture
                     obj.networkArchitecture(ind, :) = [];
                     obj.networkArchitecture(:, ind) = [];
                     
+        end
+        %------------------------------------------------------------------------------------
+        function initLayer(obj, id)
+                switch obj.layers{id}.layerType
+                    case 'input'
+                        ;
+                    case 'output'
+                        ;
+                    case 'reservoir'
+                        obj.initReservoir(id);
+                end
+        end
+
+        %------------------------------------------------------------------------------------
+        function initReservoir(obj, id)
+            ind = obj.IDs == id;
+            blockSize = obj.blocksInds(ind,2) - obj.blocksInds(ind,1) + 1;
+            %rng('shuffle');
+            % generate connecting weight in reservoir
+            switch (obj.layers{id}.params.initType)
+                case 'rand'
+                    W = sprand(blockSize, blockSize, obj.layers{id}.params.connectivity);
+                    W(W ~= 0) = W(W ~= 0) - 0.5;
+                case 'randn'
+                %otherwise
+                    W = sprandn(blockSize, blockSize, obj.layers{id}.params.connectivity);
+            end
+            obj.setWeights(ind, W);
+            obj.changeRadiusTo(ind, obj.layers{ind}.params.radius);         
+        end 
+        %------------------------------------------------------------------------------------
+        function changeLayerParamsTo(obj, id, params)
+            ind = obj.IDs == id;
+            names = fieldnames(params);
+            for k = 1:length(names)
+                switch names{k}
+                    case 'nodeType'
+                        obj.setActiveFn(ind, params.nodeType)
+                    case 'radius'
+                        obj.changeRadiusTo(ind, params.radius);
+                    case  'leakage'
+                        obj.changeLeakageTo(ind, params.leakage);
+                    case 'connectivity'
+                        ;
+                    case 'initType'
+                        obj.layers{id}.params.initType = params.initType;
+                        obj.initLayer(id);
+                        
+                end
+                
+            end
+        end
+        %------------------------------------------------------------------------------------
+        function changeConnectivityTo(obj, connectivity)
+%             delta = obj.params.connectivity - connectivity;
+%             if (delta > 0)
+%                 inds = find(obj.W == 0);
+%                 
+%             else
+%                 
+%             end
+        end
+        %------------------------------------------------------------------------------------
+        function changeLeakageTo(obj, ind, leakage)
+            obj.layers{ind}.params.leakage = leakage;
+            inds = obj.blocksInds(ind,1):obj.blocksInds(ind,2);
+            obj.leakage(inds) = leakage;
+        end
+        %------------------------------------------------------------------------------------
+        function setActiveFn(obj, ind, nodeType)
+            obj.layers{ind}.params.nodeType = nodeType;
+        	switch(nodeType)
+                case 'linear'
+                    obj.layers{ind}.actFunc = @(x) (x);
+                case 'tanh'
+                    obj.layers{ind}.actFunc = @(x) tanh(x);
+            end
+        end
+        %------------------------------------------------------------------------------------
+        function changeRadiusTo(obj, ind, radius)
+            obj.layers{ind}.params.radius = radius;
+            inds = obj.blocksInds(ind,1):obj.blocksInds(ind,2);
+            opts.tol = 1e-3;
+            maxVal = max(abs(eigs(obj.W(inds,inds), 1, 'lm', opts)));
+            obj.W(inds, inds) = radius * obj.W(inds,inds)/maxVal;
         end
         %------------------------------------------------------------------------------------
         function setConnections(obj, arch, type)
@@ -79,6 +162,8 @@ classdef Network < handle
         function setConnection(obj, sourceId, destId, params)
             srcInd = find(obj.IDs == sourceId);
             dstInd = find(obj.IDs == destId);
+            assert(~isempty(srcInd), ['ID: ', num2str(srcInd), ' is not found']);
+            assert(~isempty(dstInd), ['ID: ', num2str(dstInd), ' is not found']);
             obj.networkArchitecture(srcInd, dstInd) = params;
             srcInds = obj.blocksInds(srcInd,1):obj.blocksInds(srcInd,2);
             destInds = obj.blocksInds(dstInd, 1):obj.blocksInds(dstInd, 2);
@@ -91,38 +176,6 @@ classdef Network < handle
             end
             obj.W(destInds, srcInds) = W;
         end
-        %------------------------------------------------------------------------------------
-        function initLayer(obj, layerId)
-                switch obj.layers{layerId}.layerType
-                    case 'input'
-                        ;
-                    case 'output'
-                        ;
-                    case 'reservoir'
-                        obj.initReservoir(layerId);
-                end
-        end
-
-        %------------------------------------------------------------------------------------
-        function initReservoir(obj, layerId)
-            inds = obj.blocksInds(layerId,1):obj.blocksInds(layerId,2);
-            %rng('shuffle');
-            % generate connecting weight in reservoir
-            switch (obj.layers{layerId}.params.init_type)
-                case 'rand'
-                    W = sprand(length(inds), length(inds), obj.layers{layerId}.params.connectivity);
-                    W(W ~= 0) = W(W ~= 0) - 0.5;
-                case 'randn'
-                %otherwise
-                    W = sprandn(length(inds), length(inds), obj.layers{layerId}.params.connectivity);
-            end
-            % compute spectral radius i.e. the largest absolute eigen value 
-            opts.tol = 1e-3;
-            maxVal = max(abs(eigs(W, 1, 'lm', opts)));
-            if(maxVal ~= 0)
-                obj.W(inds, inds) = obj.layers{layerId}.params.radius * W/maxVal; % normalize W
-            end            
-        end 
         %------------------------------------------------------------------------------------
         function visualize(obj)
             conMat = obj.getConnectivityMatrix();
@@ -162,12 +215,7 @@ classdef Network < handle
                 end
             end
         end
-      %-------------------------------------------------------------------------------------
-      function x = forward(obj, u) % Calculates next step of the system
-          obj.setInput(u);
-          obj.x = obj.activate(obj.W * obj.x);
-          x = obj.x;
-      end
+
       %-------------------------------------------------------------------------------------
       function y = getOutput(obj)
             y = obj.x(obj.blocksInds(2, 1):obj.blocksInds(2, 2));
@@ -185,15 +233,41 @@ classdef Network < handle
         end
       end
       %-------------------------------------------------------------------------------------
-      function W = getWeights(id)
-          W = [];
-          for k = 1:length(obj.layers)
-            if(obj.layers{k}.id == id)
-                W = obj.W(obj.blocksInds(id,1):obj.blocksInds(id,2), :);
-                break;
-            end
-          end
-          
+      function setWeights(obj, ind, W)
+        inds = obj.blocksInds(ind,1):obj.blocksInds(ind,2);
+        obj.W(inds, inds) = W;
       end
+      %-------------------------------------------------------------------------------------
+      function W = getWeights(obj, ind)
+        inds = obj.blocksInds(ind,1):obj.blocksInds(ind,2);
+        W = obj.W(inds, inds); 
+      end
+     %-------------------------------------------------------------------------------------
+      function x = forward(obj, u) % Calculates next step of the system
+          obj.setInput(u);
+          obj.x = (1 - obj.leakage) .* obj.activate(obj.W * obj.x) + obj.leakage .* obj.x;
+          x = obj.x;
+      end
+     %-------------------------------------------------------------------------------------
+      function y = predict(obj, input) 
+        y = zeros(length(input), 1);
+        for k = 1 : length(input)
+            obj.forward(input(k));
+            y(k) = obj.getOutput();
+        end
+      end    
+     %-------------------------------------------------------------------------------------
+	function y = generate(obj, input, genLenght)
+        if(nargin() == 2)
+            genLenght = length(input);
+        end
+        obj.forward(input(1));
+        y = zeros(genLenght, 1);
+        y(1) = obj.getOutput();
+        for k = 2 : genLenght
+            obj.forward(y(k - 1));
+            y(k) = obj.getOutput();
+        end
+      end  
     end
 end
