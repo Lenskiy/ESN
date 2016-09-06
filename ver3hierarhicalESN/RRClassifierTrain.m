@@ -25,7 +25,6 @@ classdef RRClassifierTrain < handle
                 for j = 1:size(input(r,:), 2)
                     u = input(r, j); 
                     X(1:sum(esn.architecture.numNodes), j) = esn.forward(u);
-         
                 end
             
                 X(sum(esn.architecture.numNodes) + 1:end, :) = [ones(1, size(input,2)); input(r,:)];

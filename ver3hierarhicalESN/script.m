@@ -18,7 +18,7 @@ test_output  = data(2, split_point + 2:end);
 
 
 %% ESN TEST
-architecture = struct('inputDim',   size(train_input,1), 'numNodes',   1000, 'outputDim',  size(train_output,1));      
+architecture = struct('inputDim',   size(train_input,1), 'numNodes',   100, 'outputDim',  size(train_output,1));      
 % parameters  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'rand');  
 % parameters  = struct('node_type','tanh', 'radius', 0.2,'leakage', 0.5, 'connectivity',0.1, 'init_type', 'rand');
 % parameters  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand');
