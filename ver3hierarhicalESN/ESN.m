@@ -14,7 +14,6 @@ classdef ESN < handle
         W_out;
         Y_last;
         nodes;
-       
    end
    %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    methods   
@@ -54,7 +53,7 @@ classdef ESN < handle
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function y = evaluate(obj, u)
             X = forward(obj, u);
-            obj.Y_last =  obj.W_out * [X; 1; u];     
+            obj.Y_last =  obj.W_out * [1; u; X];     
             y = obj.Y_last;
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

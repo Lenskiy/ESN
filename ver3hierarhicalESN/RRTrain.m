@@ -8,22 +8,25 @@ classdef RRTrain < handle
         %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         function [error, X_collected] = train(obj, esn, input, target, initLen)
             X = zeros(sum(esn.architecture.numNodes) + esn.architecture.inputDim + 1, size(target,2));
+            X(1, :) = ones(1, size(target,2));
+            X(2:esn.architecture.inputDim + 1, :) = input;
             for j = 1:size(target, 2)
                 u = input(:, j);
-                X(1:sum(esn.architecture.numNodes), j) = esn.forward(u);
+                X(esn.architecture.inputDim + 2:esn.architecture.inputDim + 1 + sum(esn.architecture.numNodes), j) = esn.forward(u);
             end
-            X_collected = X(1:sum(esn.architecture.numNodes), initLen:end);
-            X(sum(esn.architecture.numNodes) + 1:end, :) = [ones(1, size(target,2)); input];
-          
-            
+            X_collected = X(:, initLen:end);
+
             X_ = X(:, initLen + 1:end);
-            Xinv_ =  X_' * inv(X_*X_' + 0.001*eye(size(X_,1)));
+            Xinv_ = pseudoinverse(X_,[],'lsqr', 'tikhonov',...
+               {@(x,r) r*normest(X)*x, 1e-4});
+%             Xinv_ =  X_' * inv(X_*X_' + 0.1*eye(size(X_,1)));
             esn.W_out =   target(:, initLen + 1:end) * Xinv_;
             
             esn.setInitStates();
             Y = esn.generate(input(:, 1), size(target,2), 1);
             error = mse(obj, target, Y);
             esn.resetInitStates();
+            %figure, hold on; plot(target), plot(Y)
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function error = mse(obj, x, y)

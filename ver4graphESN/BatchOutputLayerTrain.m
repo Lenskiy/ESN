@@ -8,10 +8,14 @@ classdef BatchOutputLayerTrain < handle
         %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         function [error, x_collected] = train(obj, net, input, target, initLen)
             error = inf;
-            outputId = net.getId('output');
-            layersConnectedToOuput = net.getConnectedTo(outputId);
-            indexesOfInterest = net.getInds(layersConnectedToOuput);
-
+            outputId = net.getIdByName('output');
+            layersConnectedToOuput = net.getPrevNodes(outputId);
+            indexesOfInterest = [];
+            for k = 1:length(layersConnectedToOuput)
+                indexesOfInterest = [indexesOfInterest, net.getInds(layersConnectedToOuput(k))];
+            end
+            %indexesOfInterest = 1:length(net.x);
+            
             x_interest = zeros(length(indexesOfInterest), size(target,2));
             for j = 1:size(target, 2)
                 %j
@@ -20,8 +24,9 @@ classdef BatchOutputLayerTrain < handle
                 x_interest(:, j) = x_total(indexesOfInterest);
             end
             x_collected = x_interest(:, initLen + 1:end);
-          
-            x_interest_inv =  x_collected' * inv(x_collected*x_collected' + 0.001*eye(size(x_collected,1)));
+            x_interest_inv = pseudoinverse(x_collected,[],'lsqr', 'tikhonov',...
+               {@(x,r) r*normest(x_interest)*x, 1e-4});
+%             x_interest_inv =  x_collected' * inv(x_collected*x_collected' + 0.001*eye(size(x_collected,1)));
             W_out =   target(:, initLen + 1:end) * x_interest_inv;
             begInd = 1;
             for k = 1:length(layersConnectedToOuput)

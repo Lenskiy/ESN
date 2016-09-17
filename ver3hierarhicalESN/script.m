@@ -18,24 +18,24 @@ test_output  = data(2, split_point + 2:end);
 
 
 %% ESN TEST
-architecture = struct('inputDim',   size(train_input,1), 'numNodes',   100, 'outputDim',  size(train_output,1));      
+architecture = struct('inputDim',   size(train_input,1), 'numNodes',   10, 'outputDim',  size(train_output,1));      
 % parameters  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'rand');  
 % parameters  = struct('node_type','tanh', 'radius', 0.2,'leakage', 0.5, 'connectivity',0.1, 'init_type', 'rand');
 % parameters  = struct('node_type','tanh', 'radius', 0.4,'leakage', 0.9, 'connectivity',0.1, 'init_type', 'rand');
-parameters  = struct('node_type','tanh', 'radius', 1.0,'leakage', 1.0, 'connectivity',0.25, 'init_type', 'rand');  
+parameters  = struct('node_type','tanh', 'radius', 0.8,'leakage', 0.2, 'connectivity',0.1, 'init_type', 'randn');  
 
 esn = ESN(architecture, parameters);
 train = RRTrain();
 
 initL = 100;
 
-train.train(esn, train_input, train_output, initL) 
-%Y = esn.generate(test_input(1, :), size(test_output(1,:),2), 1);
-Y = esn.predict(test_input(1, :), 1);
+[err, states] =  train.train(esn, train_input, train_output, initL);
+Y = esn.generate(train_input(1, :), size(train_output(1,:),2), 1);
+%Y = esn.predict(test_input(1, :), 1);
 
-NRMSE(Y(50:end),test_output(1,50:end))
+%NRMSE(Y(50:end),test_output(1,50:end))
 figure, hold on; title('system');
-plot(test_output(1,:));
+plot(train_input(1,:));
 plot(Y(1,:));
 
 
@@ -52,8 +52,8 @@ train = Train();
 initL = 100;
 train.train(sESN, train_input, train_output, initL)
 
-%Y = sESN.generate(test_input(1, :), size(test_output(1,:),2), 1);
-Y = sESN.predict(test_input(1, :), 1);
+Y = sESN.generate(test_input(1, :), size(test_output(1,:),2), 1);
+%Y = sESN.predict(test_input(1, :), 1);
 
 NRMSE(Y,test_output(1,:))
 
