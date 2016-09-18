@@ -19,13 +19,13 @@ lID(3) = net.addLayer(1, 'output', struct('nodeType', 'linear', 'leakage', 1.0))
 lID(4) = net.addLayer(100, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',1.0, 'initType', 'randn'));
 lID(5) = net.addLayer(100, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',1.0, 'initType', 'randn'));
 
-connections = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]; % remove to last numbers ->  1.0, 1.0
-arch = sparse([lID(2) lID(2) lID(1) lID(1) lID(1) lID(4) lID(5)],... %  remove to last IDS ->  lID(4) lID(5)
-              [lID(4) lID(5) lID(3) lID(4) lID(5) lID(3) lID(3)], connections,6,6); % remove to last IDS ->  lID(3) lID(3)
+connections = [1.0, 1.0, 1.0, 1.0, 1.0 1.0, 1.0]; % remove two last numbers ->  1.0, 1.0
+arch = sparse([lID(2) lID(2) lID(1) lID(1) lID(1) lID(4) lID(5)],... %  remove two last IDS ->  lID(4) lID(5)
+              [lID(4) lID(5) lID(3) lID(4) lID(5) lID(3) lID(3)], connections,6,6); % remove two last IDS ->  lID(3) lID(3)
 net.setConnections(arch, 'randn');
 
 % And uncomment the following lines
-% lID(6) = net.addLayer(100, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',1.0, 'initType', 'randn'));
+% lID(6) = net.addLayer(5000, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',1.0, 'initType', 'randn'));
 % net.setConnection(lID(4), lID(6), struct('type', 'randn', 'connectivity', 0.01));
 % net.setConnection(lID(5), lID(6), struct('type', 'randn', 'connectivity', 0.01));
 % net.setConnection(lID(6), lID(3), struct('type', 'randn', 'connectivity', 1.0));
@@ -36,7 +36,7 @@ net.visualize();
 boltrain = BatchOutputLayerTrain();
 initLen = 100;
 tic
-[~, x] = boltrain.train(net, train_input, train_output, initLen);
+x = boltrain.train(net, train_input, train_output, initLen);
 toc
 % figure, plot(x')
 

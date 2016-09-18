@@ -22,9 +22,9 @@ net = Network();
 lID(1) = net.addLayer(1, 'bias',   struct('nodeType', 'linear', 'leakage', 1, 'initType', 'randn')); % All layers have bias
 lID(2) = net.addLayer(1, 'input',  struct('nodeType', 'linear', 'leakage', 1.0));
 lID(3) = net.addLayer(1, 'output', struct('nodeType', 'linear', 'leakage', 1.0));
-lID(4) = net.addLayer(150, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 0.2, 'connectivity',0.2, 'initType', 'randn'));
-lID(5) = net.addLayer(100, 'reservoir', struct('nodeType', 'tanh', 'radius', 0.6, 'leakage', 0.2, 'connectivity',0.4, 'initType', 'randn'));
-lID(6) = net.addLayer(50, 'reservoir', struct('nodeType', 'tanh', 'radius', 0.3, 'leakage', 0.2, 'connectivity',0.8, 'initType', 'randn'));
+lID(4) = net.addLayer(250, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 0.2, 'connectivity',0.2, 'initType', 'randn'));
+lID(5) = net.addLayer(200, 'reservoir', struct('nodeType', 'tanh', 'radius', 0.6, 'leakage', 0.2, 'connectivity',0.4, 'initType', 'randn'));
+lID(6) = net.addLayer(150, 'reservoir', struct('nodeType', 'tanh', 'radius', 0.3, 'leakage', 0.2, 'connectivity',0.8, 'initType', 'randn'));
 
 connections = [1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.1, 1.0, 0.00, 0.2];
 arch = sparse([lID(2) lID(1) lID(1) lID(1) lID(1) lID(4) lID(5) lID(6), lID(6), lID(4)],...
@@ -44,14 +44,14 @@ net.setConnection(lID(5), lID(6), struct('type', 'randn', 'connectivity', 0.1));
 boltrain = BatchOutputLayerTrain();
 initLen = 100;
 tic
-[~, x] = boltrain.train(net, train_input, train_output, initLen);
+x = boltrain.train(net, train_input, train_output, initLen);
 toc
 % figure, plot(x')
 
 %% Generate
 tic
 net.rememberStates();
-y = net.generate(train_input(1), length(train_input));
+y = net.generate(test_input(1), length(test_input));
 net.recallStates();
 toc
 
@@ -59,5 +59,5 @@ disp(['RMSE: ', num2str(sqrt(mse(y - test_output)))]);
 disp(['NRMSE: ', num2str(NRMSE(y, test_output))]);
 
 figure, hold on;
-plot(train_output, 'linewidth', 2);
+plot(test_output, 'linewidth', 2);
 plot(y,'-.', 'linewidth', 2);

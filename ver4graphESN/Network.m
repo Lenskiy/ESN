@@ -266,7 +266,7 @@ classdef Network < handle
         end
         %-------------------------------------------------------------------------------------
         function setInput(obj, u)
-            ind = obj.IDtoInd(obj.getIdByName('input'));
+            ind = obj.IDtoInd(obj.getIdByName('input')); % Here is a bottle neck 
             obj.states(obj.blocksInds(ind, 1):obj.blocksInds(ind, 2)) = u;
         end
         %-------------------------------------------------------------------------------------
@@ -367,6 +367,28 @@ classdef Network < handle
        function stateInds = getInds(obj, id)
                 indLayer = obj.IDtoInd(id);
                 stateInds = obj.blocksInds(indLayer,1):obj.blocksInds(indLayer,2);
+       end
+       %-------------------------------------------------------------------------------------
+       function states = getStates(obj, IDs)
+           states = [];
+            for k = 1:length(IDs)
+                states = [states; obj.states(obj.getInds(IDs(k)))];
+            end           
+       end
+       %-------------------------------------------------------------------------------------
+       function setStates(obj, IDs, states)
+           begInd = 1;
+            for k = 1:length(IDs)
+                endInd = begInd + getNumberOfStates(IDs(k)) - 1;
+                obj.states(net.getInds(IDs(k))) = states(begInd:endInd); 
+            end           
+       end
+       %-------------------------------------------------------------------------------------
+       function numStates = getNumberOfStates(obj, IDs)
+           numStates = 0;
+            for k = 1:length(IDs)
+                numStates = numStates +  obj.layers{obj.IDtoInd(IDs(k))}.numNodes;
+            end    
        end
        %-------------------------------------------------------------------------------------
        function propogationRoute = buildPropogationRoute(obj, conMat, inputID, outputID)
