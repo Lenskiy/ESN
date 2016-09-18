@@ -14,14 +14,14 @@ test_output  = data(2, split_point + 2:end);
 net = Network();
 
 lID(1) = net.addLayer(1, 'bias',   struct('nodeType', 'linear', 'leakage', 1, 'initType', 'randn')); % All layers have bias
-lID(2) = net.addLayer(1, 'input',  struct('nodeType', 'linear', 'leakage', 1.0));
-lID(3) = net.addLayer(1, 'output', struct('nodeType', 'linear', 'leakage', 1.0));
-lID(4) = net.addLayer(100, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',1.0, 'initType', 'randn'));
+lID(2) = net.addLayer(size(train_input,1), 'input',  struct('nodeType', 'linear', 'leakage', 1.0));
+lID(3) = net.addLayer(size(train_output,1), 'output', struct('nodeType', 'linear', 'leakage', 1.0));
+lID(4) = net.addLayer(1000, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',1.0, 'initType', 'randn'));
 lID(5) = net.addLayer(100, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',1.0, 'initType', 'randn'));
 
 connections = [1.0, 1.0, 1.0, 1.0, 1.0 1.0, 1.0]; % remove two last numbers ->  1.0, 1.0
 arch = sparse([lID(2) lID(2) lID(1) lID(1) lID(1) lID(4) lID(5)],... %  remove two last IDS ->  lID(4) lID(5)
-              [lID(4) lID(5) lID(3) lID(4) lID(5) lID(3) lID(3)], connections,6,6); % remove two last IDS ->  lID(3) lID(3)
+              [lID(4) lID(5) lID(3) lID(4) lID(5) lID(3) lID(3)], connections,5,5); % remove two last IDS ->  lID(3) lID(3)
 net.setConnections(arch, 'randn');
 
 % And uncomment the following lines
@@ -46,7 +46,7 @@ net.rememberStates();
 y = net.predict(test_input);
 net.recallStates();
 toc
-disp(['RMSE: ', num2str(sqrt(mse(y - test_output)))]);
+disp(['RMSE: ', num2str(norm(y - test_output)/sqrt(length(y)))]);
 disp(['NRMSE: ', num2str(NRMSE(y, test_output))]);
 
 figure, hold on;

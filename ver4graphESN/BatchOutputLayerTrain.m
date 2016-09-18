@@ -22,9 +22,9 @@ classdef BatchOutputLayerTrain < handle
                {@(x,r) r*normest(x_interest)*x, 1e-4});
 %              x_interest_inv =  x_collected' * inv(x_collected*x_collected' + 0.001*eye(size(x_collected,1)));
             W_out =   target(:, initLen + 1:end) * x_interest_inv;
-            
+       
             % put the trained weights in the weight matrix of the network 
-            net.setWeightsForSelectedWeights(outputId, toOuputIDs, W_out);
+             net.setWeightsForSelectedWeights(outputId, toOuputIDs, W_out);
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function error = mse(obj, x, y)

@@ -24,7 +24,7 @@ classdef Network < handle
             obj.networkArchitecture = networkArchitecture;
             obj.Weights = sparse([]);
             obj.states = []; % the first index resereved for bias i.e. always 1;
-            obj.leakage = [];
+            %obj.leakage = [];
             obj.noiseStd = [];
             obj.layers = [];
             obj.indToID = [];
@@ -48,7 +48,7 @@ classdef Network < handle
                                     'params', params));
 
             obj.states = [obj.states; zeros(numNodes, 1)];
-            obj.leakage = [obj.leakage; params.leakage * ones(numNodes, 1)];
+            %obj.leakage = [obj.leakage; params.leakage * ones(numNodes, 1)];
             obj.setActiveFn(id, params.nodeType);
             obj.initLayer(id);
             
@@ -72,7 +72,7 @@ classdef Network < handle
                     obj.Weights(inds(1):inds(2), :) = [];
                     obj.Weights(:, inds(1):inds(2)) = [];
                     obj.states(inds(1):inds(2)) = [];
-                    obj.leakage(inds(1):inds(2)) = [];
+                    %obj.leakage(inds(1):inds(2)) = [];
                     % remove connections in networkArchitecture
                     obj.networkArchitecture(ind, :) = [];
                     obj.networkArchitecture(:, ind) = [];
@@ -85,15 +85,16 @@ classdef Network < handle
             switch obj.layers{layerIndex}.layerType
                 case 'input'
                     %obj.leakage(obj.getInds(id)) = 1;
-                    obj.Weights(obj.getInds(id), obj.getInds(id)) = 1;
+                    obj.Weights(obj.getInds(id), obj.getInds(id)) = eye(obj.layers{id}.numNodes);
                 case 'output'
                         ;
                 case 'reservoir'
                         obj.initReservoir(id);
                 case 'bias'
-                    obj.leakage(obj.getInds(id)) = 1;
-                    obj.states(obj.getInds(id)) = 1;
+                    %obj.leakage(obj.getInds(id)) = 1;
+                    obj.setStates(obj.getInds(id), 1);
                     obj.Weights(obj.getInds(id), obj.getInds(id)) = 1;
+                    obj.setLeakage(id, 1);
             end
         end
         %------------------------------------------------------------------------------------
@@ -146,8 +147,8 @@ classdef Network < handle
         function setLeakage(obj, id, leakage)
             layerIndex = obj.IDtoInd(id);
             obj.layers{layerIndex}.params.leakage = leakage;
-            inds = obj.blocksInds(layerIndex,1):obj.blocksInds(layerIndex,2);
-            obj.leakage(inds) = leakage;
+            %inds = obj.blocksInds(layerIndex,1):obj.blocksInds(layerIndex,2);
+            %obj.leakage(inds) = leakage;
         end
         %------------------------------------------------------------------------------------
         function setActiveFn(obj, id, nodeType)
@@ -196,6 +197,7 @@ classdef Network < handle
                      W(W ~= 0) = W(W ~= 0) - 0.5;
                 case 'randn'
                      W = sprandn(length(destInds), length(srcInds), params.connectivity);
+%                         W = randn(length(destInds), length(srcInds));
             end
             obj.Weights(destInds, srcInds) = W;
             
@@ -214,19 +216,19 @@ classdef Network < handle
                     case 'input'
                         graph.Nodes(k).Color = [0.7 0.7 0.5];
                         graph.Nodes(k).shape = 'parallelogram';
-                        graph.Nodes(k).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType];
+                        graph.Nodes(k).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType(1:3)];
                         graph.Nodes(k).Size = [50, 15];
                     case 'output'
                         graph.Nodes(obj.layers{k}.id).Color = [0.7 0.7 0.5];
                         graph.Nodes(k).shape = 'parallelogram';
-                        graph.Nodes(k).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType];
+                        graph.Nodes(k).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType(1:3)];
                         graph.Nodes(k).Size = [50, 15];
                     case 'reservoir'
                         graph.Nodes(k).shape = 'circle';
                         graph.Nodes(k).LineWidth = 10 * obj.layers{k}.params.connectivity;
                         numIntStates = obj.blocksInds(end,2) -  obj.blocksInds(1,1); % *needs take into account deleted layers
                         graph.Nodes(k).Size = round(80 * [obj.layers{k}.numNodes; obj.layers{k}.numNodes]/numIntStates) + 20;
-                        graph.Nodes(k).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType];
+                        graph.Nodes(k).Label = [num2str(obj.layers{k}.id), ':',obj.layers{k}.layerType(1:3), ':',num2str(obj.layers{k}.numNodes)];
                     case 'bias'
                         graph.Nodes(k).shape = 'box';
                         graph.Nodes(k).Size = [15; 15];
@@ -271,10 +273,11 @@ classdef Network < handle
         end
         %-------------------------------------------------------------------------------------
         function y = predict(obj, input)
-            y = zeros(1, length(input));
+            dimOutput = obj.layers{obj.IDtoInd(obj.getIdByName('output'))}.numNodes;
+            y = zeros(dimOutput, length(input));
             for k = 1 : length(input)
-                obj.forward(input(k));
-                y(k) = obj.getOutput();
+                obj.forward(input(:,k));
+                y(:,k) = obj.getOutput();
             end
         end    
         %-------------------------------------------------------------------------------------
@@ -284,13 +287,13 @@ classdef Network < handle
                 genLenght = length(input);
             end
             
-            y = zeros(1, genLenght);
+            y = zeros(size(input,1), genLenght);
             obj.forward(input(:,1));
             
-            y(1) = obj.getOutput();
+            y(:, 1) = obj.getOutput();
             for k = 2 : genLenght
-                obj.forward(y(k - 1));
-                y(k) = obj.getOutput();
+                obj.forward(y(:, k - 1));
+                y(:, k) = obj.getOutput();
             end
         end
        %-------------------------------------------------------------------------------------
@@ -342,8 +345,11 @@ classdef Network < handle
         %-------------------------------------------------------------------------------------
         function forwardLayer(obj, id)
             inds = obj.getInds(id);
-            obj.states(inds) = obj.leakage(inds) .* obj.layers{obj.IDtoInd(id)}.actFunc(obj.Weights(inds, :) * obj.states)...
-                                        + (1 - obj.leakage(inds)) .* obj.states(inds);       
+%             obj.states(inds) = obj.leakage(inds) .* obj.layers{obj.IDtoInd(id)}.actFunc(obj.Weights(inds, :) * obj.states)...
+%                                         + (1 - obj.leakage(inds)) .* obj.states(inds);
+            leakage = obj.layers{obj.IDtoInd(id)}.params.leakage;                       
+            obj.states(inds) =  leakage.* obj.layers{obj.IDtoInd(id)}.actFunc(obj.Weights(inds, :) * obj.states)...
+                                        + (1 - leakage) .* obj.states(inds); 
         end
         %-------------------------------------------------------------------------------------
         function x = forward(obj, u) % Calculates next step of the system
@@ -391,8 +397,8 @@ classdef Network < handle
        function setStates(obj, IDs, states)
            begInd = 1;
             for k = 1:length(IDs)
-                endInd = begInd + getNumberOfStates(IDs(k)) - 1;
-                obj.states(net.getInds(IDs(k))) = states(begInd:endInd); 
+                endInd = begInd + obj.getNumberOfStates(IDs(k)) - 1;
+                obj.states(obj.getInds(IDs(k))) = states(begInd:endInd); 
             end           
        end
        %-------------------------------------------------------------------------------------
@@ -429,7 +435,7 @@ classdef Network < handle
                 nodeToBeVisited = [nodeToBeVisited candidates(sind)];
                 propogationRoute = [propogationRoute, curInd];
             end
-            propogationRoute = obj.indToID(propogationRoute);
+            propogationRoute = obj.indToID(propogationRoute(2:end)); % skip input node
        end    
     end    
 end

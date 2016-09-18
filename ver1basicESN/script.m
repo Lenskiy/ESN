@@ -67,12 +67,12 @@ test_output = Lorenz_data(mid_point + 2:end, :);
 
 N = 10;
 connectivity = 0.25;
-sp_radius = 2;
+sp_radius = 1;
 lr = 0.05;
 [Win, W] = buildESN(size(Lorenz_data,2), N, connectivity, sp_radius);
-[Wout, states] = trainESN(train_input, train_output, Win, W, lr);
-Y = runESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr); 
-
+[Wout, states, states_evolution] = trainESN(train_input, train_output, Win, W, lr, 0);
+Y = runESN(test_input(1,:), length(test_output), states, Win, W, Wout, lr, 0); 
+figure, plot(states_evolution')
 
 errorLen = 1000;
 dif = Y(1:errorLen, :) - test_output(1:errorLen, :);
@@ -84,8 +84,8 @@ plot3(test_input(:,1), test_input(:,2), test_input(:,3));
 plot3(Y(:,1), Y(:,2), Y(:,3));
 
 figure(4);hold on;
-plot( test_output(1:500,:), 'k');
-plot( Y(1:500,:));
+plot( test_output(1:4000,:), 'k');
+plot( Y(1:4000,:));
 hold off;
 axis tight;
 legend('Target signal','Target signal', 'Target signal',  'Generated',  'Generated',  'Generated');
