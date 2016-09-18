@@ -328,6 +328,18 @@ classdef Network < handle
             obj.Weights(inds1, inds2) = W;
         end
         %-------------------------------------------------------------------------------------
+        function setWeightsForSelectedWeights(obj, ID1, IDs2, W)
+            skippedIDs = setdiff(obj.indToID, IDs2); % obj.indToID is set of all IDs
+            for k = 1:length(IDs2)
+                numSkipped = sum(skippedIDs < IDs2(k)); % number of skipped layers
+                skipInds = obj.blocksInds(skippedIDs(1:numSkipped), 2)...
+                        - (obj.blocksInds(skippedIDs(1:numSkipped), 1) - 1); % number of states in every skipped layer 
+                % remove the number of states corresponding to the skipped layers
+                indsForSkipped = obj.getInds(IDs2(k)) - sum(skipInds);
+                obj.setWeights(ID1, IDs2(k), W(:, indsForSkipped));
+            end
+        end
+        %-------------------------------------------------------------------------------------
         function forwardLayer(obj, id)
             inds = obj.getInds(id);
             obj.states(inds) = obj.leakage(inds) .* obj.layers{obj.IDtoInd(id)}.actFunc(obj.Weights(inds, :) * obj.states)...

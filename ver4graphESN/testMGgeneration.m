@@ -30,7 +30,7 @@ connections = [1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.1, 1.0, 0.00, 0.2];
 arch = sparse([lID(2) lID(1) lID(1) lID(1) lID(1) lID(4) lID(5) lID(6), lID(6), lID(4)],...
               [lID(4) lID(3) lID(4) lID(5) lID(6) lID(5) lID(6) lID(3), lID(4), lID(6)], connections,6,6);
 net.setConnections(arch, 'randn');
-net.visualize();
+% net.visualize();
 
 
 %% Test removal and addition of layers and connections
