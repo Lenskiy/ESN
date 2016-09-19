@@ -57,7 +57,7 @@ net.recallStates();
 toc
 
 disp(['RMSE: ', num2str(norm(y - test_output)/sqrt(length(y)))]);
-disp(['NRMSE: ', num2str(NRMSE(y, test_output))]);
+%disp(['NRMSE: ', num2str(NRMSE(y, test_output))]);
 
 figure, hold on;
 plot(test_output, 'linewidth', 2);
