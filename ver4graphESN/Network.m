@@ -12,6 +12,8 @@ classdef Network < handle
        IDtoInd;
        savedStates;
        propogationOrder;
+       outputIDs;
+       inputIDs;
     end
     
     properties
@@ -26,6 +28,8 @@ classdef Network < handle
             obj.states = []; % the first index resereved for bias i.e. always 1;
             %obj.leakage = [];
             obj.noiseStd = [];
+            obj.inputIDs = [];
+            obj.outputIDs = [];
             obj.layers = (struct('id', {},...
                                     'numNodes', {},...
                                     'layerType', {},...
@@ -62,7 +66,17 @@ classdef Network < handle
         %------------------------------------------------------------------------------------
         function removeLayer(obj,  id) % broken, lot of works needs to be done
                     assert(ismember(id, obj.indToID), ['ID: ', num2str(id), ' is not found']);
-  
+                    %check if the layer to be removed is an output layer
+                    ind = find(obj.outputIDs == id);
+                    if(~isempty(ind))
+                        obj.outputIDs(ind) = [];
+                    end
+                    %check if the layer to be removed is an input layer
+                    ind = find(obj.inputIDs == id);
+                    if(~isempty(ind))
+                        obj.inputIDs(ind) = [];
+                    end
+                    
                     ind = obj.IDtoInd(id); % could be speeded up
                     obj.indToID(ind) = [];
                     obj.IDtoInd(id:end) = obj.IDtoInd(id:end) - 1; 
@@ -91,10 +105,11 @@ classdef Network < handle
                 case 'input'
                     %obj.leakage(obj.getInds(id)) = 1;
                     obj.Weights(obj.getInds(id), obj.getInds(id)) = eye(obj.layers(id).numNodes);
+                    obj.inputIDs = [obj.inputIDs id];
                 case 'output'
-                        ;
+                    obj.outputIDs = [obj.outputIDs id];
                 case 'reservoir'
-                        obj.initReservoir(id);
+                    obj.initReservoir(id);
                 case 'bias'
                     %obj.leakage(obj.getInds(id)) = 1;
                     obj.setStates(obj.getInds(id), 1);
@@ -268,17 +283,19 @@ classdef Network < handle
         end
         %-------------------------------------------------------------------------------------
         function y = getOutput(obj)
-            ind = obj.IDtoInd(obj.getIdByName('output'));
+            %ind = obj.IDtoInd(obj.getIdByName('output'));
+            ind = obj.IDtoInd(obj.outputIDs); 
             y = obj.states(obj.blocksInds(ind, 1):obj.blocksInds(ind, 2));
         end
         %-------------------------------------------------------------------------------------
         function setInput(obj, u)
-            ind = obj.IDtoInd(obj.getIdByName('input')); % Here is a bottle neck 
+            %ind = obj.IDtoInd(obj.getIdByName('input')); % Here is a bottle neck 
+            ind = obj.IDtoInd(obj.inputIDs); 
             obj.states(obj.blocksInds(ind, 1):obj.blocksInds(ind, 2)) = u;
         end
         %-------------------------------------------------------------------------------------
         function y = predict(obj, input)
-            dimOutput = obj.layers(obj.IDtoInd(obj.getIdByName('output'))).numNodes;
+            dimOutput = obj.layers(obj.IDtoInd(obj.outputIDs)).numNodes;
             y = zeros(dimOutput, length(input));
             for k = 1 : length(input)
                 obj.forward(input(:,k));

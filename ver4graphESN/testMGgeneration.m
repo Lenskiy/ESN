@@ -3,9 +3,9 @@
 % (3) add withend reservoir 
 % (4) rewrite sprand and sprandn
 % (6) add possibility to remove connections
-% (7) analyze ESN from Graph theoretic point of view i.e. how the length of shortest path
+% (7) analyze ESN from Graph theoretic point of view i.e. how the length of
+% shortest path from any node effects complexity of the generated signal
 % (8) Instead of getInds(), put generated indexes in the layer stucture
-% from any node effects complexity of the generated signal
 
 %% Training data preparation
 addpath('../T0_chaotic/');
