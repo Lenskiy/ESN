@@ -10,7 +10,7 @@ classdef BatchTrainClassifierOutputLayer < handle
             
             nExamples = size(input,3);
             nNetworkInputs = size(input,2);
-            nSamplesInExample = size(input,1);
+            nSamplesInExample = size(input,2);
             nClasses = size(target, 1);
             
             outputId = net.getIdByName('output');
@@ -20,11 +20,14 @@ classdef BatchTrainClassifierOutputLayer < handle
             
             net.rememberStates();
             
+            interestStates = zeros(net.getNumberOfStates(toOuputIDs), nSamplesInExample);
+            
             for k = 1:nExamples
-                k/nExamples
+                if(mod(k, 100) == 0) 
+                    k/nExamples
+                end
                 net.recallStates();
                
-                interestStates = zeros(net.getNumberOfStates(toOuputIDs), nSamplesInExample);
                 for j = 1:nSamplesInExample
                     net.forward(input(:, j, k));
                     interestStates(:, j) = net.getStates(toOuputIDs);
