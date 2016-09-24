@@ -8,10 +8,10 @@ classdef BatchTrainClassifierOutputLayer < handle
         %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         function [error] = train(obj, net, input, target, initLen)
             
+            %assert(size(input, 3) == size(target, 2), 'Number of samples in input and ouput should be equal')
+            
             nExamples = size(input,3);
-            nNetworkInputs = size(input,2);
             nSamplesInExample = size(input,2);
-            nClasses = size(target, 1);
             
             outputId = net.getIdByName('output');
             toOuputIDs = net.getPrevNodes(outputId);
@@ -41,7 +41,7 @@ classdef BatchTrainClassifierOutputLayer < handle
             Sinv =  avgStates' * inv(avgStates*avgStates' + 0.001*eye(size(avgStates,1)));
 
             W_out =   target * Sinv;
-            net.setWeightsForSelectedWeights(outputId, toOuputIDs, W_out);
+            net.setWeightsForSelectedWeights(toOuputIDs, outputId, W_out');
            
             % Calc classification errors
           

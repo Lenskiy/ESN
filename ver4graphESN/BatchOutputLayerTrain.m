@@ -10,8 +10,9 @@ classdef BatchOutputLayerTrain < handle
             outputId = net.getIdByName('output');
             toOuputIDs = net.getPrevNodes(outputId);
             
-           x_interest = zeros(net.getNumberOfStates(toOuputIDs), size(target,2));
-           for j = 1:size(target, 2)
+           nExamples = size(target,2); 
+           x_interest = zeros(net.getNumberOfStates(toOuputIDs), nExamples);
+           for j = 1:nExamples
                 u = input(:, j);
                 net.forward(u);
                 x_interest(:, j) = net.getStates(toOuputIDs);
@@ -24,7 +25,7 @@ classdef BatchOutputLayerTrain < handle
             W_out =   target(:, initLen + 1:end) * x_interest_inv;
        
             % put the trained weights in the weight matrix of the network 
-             net.setWeightsForSelectedWeights(outputId, toOuputIDs, W_out);
+             net.setWeightsForSelectedWeights(toOuputIDs, outputId, W_out');
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function error = mse(obj, x, y)

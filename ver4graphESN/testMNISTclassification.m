@@ -10,8 +10,6 @@ test_input = mnisttest(:,2:end)';
 test_input_org = reshape(test_input, [28, 28, size(test_input,2)]);
 test_output = ind2vec(mnisttest(:,1)' + 1);
 
-train_input_comb = zeros(size(test_input_org,1) + size(test_input_rot,1), size(test_input_org,2), size(test_input_org,3));
-
 %rotate
 for k = 1:size(train_input_org,3)
     train_input_rot(:, :, k) = train_input_org(:, :, k)';
@@ -22,8 +20,10 @@ for k = 1:size(test_input_org,3)
     test_input_rot(:, :, k) = test_input_org(:, :, k)';
     test_input_comb(:,:,k) = [test_input_org(:, :, k); test_input_rot(:, :, k)];
 end
-%% Normalize
 
+%% Normalize
+train_input_comb = train_input_comb / 255;
+test_input_comb = test_input_comb / 255;
 
 % figure, hold on;
 % subplot(2,1,1), imshow(uint8(255*test_input_comb(:,:,1)));
@@ -38,7 +38,7 @@ lID(1) = net.addLayer(1, 'bias',   struct('nodeType', 'linear', 'leakage', 1, 'i
 lID(2) = net.addLayer(size(train_input_org,1), 'input',  struct('nodeType', 'linear', 'leakage', 1.0));
 lID(3) = net.addLayer(size(train_input_rot,1), 'input',  struct('nodeType', 'linear', 'leakage', 1.0));
 lID(4) = net.addLayer(size(train_output,1), 'output',  struct('nodeType', 'linear', 'leakage', 1.0));
-lID(5) = net.addLayer(10000, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',0.001, 'initType', 'randn'));
+lID(5) = net.addLayer(1000, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',0.01, 'initType', 'randn'));
 % lID(6) = net.addLayer(400, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',0.001, 'initType', 'randn'));
 % lID(7) = net.addLayer(200, 'reservoir', struct('nodeType', 'tanh', 'radius', 1.0, 'leakage', 1.0, 'connectivity',0.001, 'initType', 'randn'));
 
@@ -54,29 +54,52 @@ net.visualize();
 boltrain = BatchTrainClassifierOutputLayer();
 initLen = 0;
 tic
-error = boltrain.train(net, train_input_comb, train_output, initLen);
+error = boltrain.train(net, train_input_comb, train_output, initLen)
 toc
 
 %% Test
-nExamples = size(test_input,3);
+input = test_input_comb;
+target = test_output;
+indTarget = vec2ind(target);
 
-indTarget = vec2ind(test_output);
-
-h = 0;
+nExamples = size(input,3);
+nSamplesInExample = size(input,2);
+            
+outputId = net.getIdByName('output');
+toOuputIDs = net.getPrevNodes(outputId);
+                
+avgStates = zeros(net.getNumberOfStates(toOuputIDs), nExamples);
+            
+W_out = net.getWeights(toOuputIDs, outputId);          
+interestStates = zeros(net.getNumberOfStates(toOuputIDs), nSamplesInExample);
+h = 0;   
 tic
-for k = 1:nExamples
-    k/nExamples
-    net.rememberStates();
-	y = net.predict(test_input(:,:,k));
-	net.recallStates();
-
-    [~, maxind] = max(mean(y,2));
-	if maxind == indTarget(k)
-        h = h + 1;
-	end
-end
-toc
-         
+            for k = 1:nExamples
+                if(mod(k, 100) == 0) 
+                    k/nExamples
+                end
+                net.recallStates();
+               
+                for j = 1:nSamplesInExample
+                    net.forward(input(:, j, k));
+                    interestStates(:, j) = net.getStates(toOuputIDs);
+                end          
+                
+                % Spatial average            
+                avgStates(:, k) = mean(interestStates(:, initLen + 1:end),2);
+            end
+                
+                P = W_out'*avgStates;
+                
+            for k = 1:nExamples    
+                 [~, maxind] = max(P(:,k));  
+                
+                if maxind == indTarget(k)
+                    h = h +1;
+                end
+                
+            end
+toc         
 % Hit rate
 error = 1 - h/nExamples
             
