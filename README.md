@@ -1,2 +1,2 @@
 # ESN
-![](/ESN/ver4graphESN/demo.png?raw=true "Grapth based ESN")
+![](/ESN/blob/master/ver4graphESN/demo.png "Grapth based ESN")
