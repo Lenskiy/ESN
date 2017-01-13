@@ -8,8 +8,11 @@ rand('seed', 42);
 
 trainLen = 7000;
 testLen  = 2000;
-initLen  = 1000;
-data     = load('MackeyGlass_t17.txt');
+initLen  = 100;
+%addpath('../T0_chaotic/');
+data = mackeyglass(10000);
+
+clear X;
 
 %         Input neurons
 inSize  = 1; 
@@ -18,12 +21,19 @@ outSize = 1;
 %         Reservoir size
 resSize = 1000;
 %         Leaking rate
-a       = 0.6; 
+leak       = 0.6; 
 %         Input weights
-Win     = ( rand(resSize, (inSize+1) ) - 0.5) .* 1;
+Win     = ( randn(resSize, (inSize+1) )) .* 1;
 %         Reservoir weights
-W       = rand(resSize, resSize) - 0.5;
+W       = sprandn(resSize, resSize, 0.1);
+%         Spectral radius
+radius = 1;
 
+% Noramize the weigth matrix so the highest eigenvalue is equal to radius
+opts.tol = 1e-3;
+maxVal = max(abs(eigs(W, 1, 'lm', opts)));
+W = W/maxVal;
+            
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
 % Run the reservoir with the data and collect X.
@@ -44,7 +54,7 @@ for t = 1:trainLen
     u    = data(t);
 
     xUpd = tanh( Win * [1;u] + W * x );    
-    x    = (1-a) * x + a * xUpd;
+    x    = (1-leak) * x + leak * xUpd;
 
     if ( t > initLen )
         X(:,t-initLen) = [1;u;x];
@@ -83,7 +93,7 @@ u = data(trainLen+1);
 for t = 1:testLen 
 
     xUpd   = tanh( Win*[1;u] + W*x );
-    x      = (1-a)*x + a*xUpd;
+    x      = (1-leak)*x + leak*xUpd;
 
     %        Generative mode:
     u      = Wout*[1;u;x];
@@ -103,13 +113,14 @@ figure(1);
 plot( data(trainLen+2:trainLen+testLen+1), 'color', [0,0.75,0] ); 
 hold on; 
 plot( Y', 'b' ); 
+legend('True', 'Generated')
 %hold off; 
 axis tight; 
 title('Target and generated signals y(n) starting at n=0'); 
 legend('Target signal', 'Free-running predicted signal'); 
 % 
-% figure(2); plot( X(1:20,1:200)' ); 
-% title('Some reservoir activations x(n)'); 
+figure(2); plot( X(3:52,1:400)' ); 
+title('First 50 reservoir states x(n)'); 
 
-% figure(3); bar( Wout' ) 
-% title('Output weights W^{out}');
+figure(3); bar( Wout' ) 
+title('Output weights W^{out}');

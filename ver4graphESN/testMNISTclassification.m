@@ -54,7 +54,7 @@ net.visualize();
 boltrain = BatchTrainClassifierOutputLayer();
 initLen = 0;
 tic
-error = boltrain.train(net, train_input_comb, train_output, initLen)
+error = boltrain.train(net, test_input_comb, test_output, initLen)
 toc
 
 %% Test
