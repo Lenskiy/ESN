@@ -1,13 +1,13 @@
 %% Lorenz training/testing data
 addpath('../T0_chaotic/');
 [x1, x2, x3] = lorenz(28, 10, 8/3);
-dataLen = 10000;
+dataLen = 20000;
 startInd = 1;
 Lorenz_data = [x1(startInd:startInd + dataLen),...
                x2(startInd:startInd + dataLen),...
                x3(startInd:startInd + dataLen)]';
 
-p = 0.75;
+p = 0.8;
 mid_point = round((length(Lorenz_data) - 1) * p);
 train_input = Lorenz_data(:, 1:mid_point);
 train_output = Lorenz_data(:, 2:mid_point + 1);
@@ -17,12 +17,12 @@ test_output = Lorenz_data(:, mid_point + 2:end, :);
 %% Construct the network
 net = Network();
 
-lID(1) = net.addLayer(1,                    'bias',     struct('nodeType', 'linear', 'leakage', 1.0)); % All layers have bias
-lID(2) = net.addLayer(size(train_input, 1), 'input',    struct('nodeType', 'linear', 'leakage', 1.0));
-lID(3) = net.addLayer(size(train_output,1), 'output',   struct('nodeType', 'linear', 'leakage', 1.0));
-lID(4) = net.addLayer(1000,                 'layer',    struct('nodeType', 'tanh',   'leakage', 0.4));
-lID(5) = net.addLayer(100,                  'layer',    struct('nodeType', 'tanh', 'leakage', 0.6));
-lID(6) = net.addLayer(50,                   'layer',    struct('nodeType', 'tanh', 'leakage', 1.0));
+lID(1) = net.addLayer(1,                    'bias',     struct('nodeType', 'linear', 'leakageInit', 'constant', 'leakageVal', '1.0')); 
+lID(2) = net.addLayer(size(train_input, 1), 'input',    struct('nodeType', 'linear', 'leakageInit', 'constant', 'leakageVal', '0.0'));
+lID(3) = net.addLayer(size(train_output,1), 'output',   struct('nodeType', 'linear', 'leakageInit', 'constant', 'leakageVal', '1.0'));
+lID(4) = net.addLayer(200,                  'layer',     struct('nodeType', 'tanh',   'leakageInit', 'rand', 'leakageVal', '0.5:0.8'));
+%lID(5) = net.addLayer(20,                  'layer',     struct('nodeType', 'tanh',   'leakageInit', 'rand', 'leakageVal', '0.8:1.0'));
+%lID(6) = net.addLayer(10,                  'layer',     struct('nodeType', 'tanh',   'leakageInit', 'rand', 'leakageVal', '0.8:1.0'));
 
 
 net.setConnection(lID(2), lID(4), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
@@ -30,15 +30,15 @@ net.setConnection(lID(2), lID(3), struct('initType', 'randn', 'connectivity', 1.
 net.setConnection(lID(1), lID(3), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
 net.setConnection(lID(1), lID(4), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
 net.setConnection(lID(4), lID(3), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
-net.setConnection(lID(1), lID(5), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
-net.setConnection(lID(1), lID(6), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
+%net.setConnection(lID(1), lID(5), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
+%net.setConnection(lID(1), lID(6), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
 net.setConnection(lID(4), lID(4), struct('initType', 'randn', 'connectivity', 0.1, 'radius', 1.0));
-net.setConnection(lID(5), lID(5), struct('initType', 'randn', 'connectivity', 0.2, 'radius', 0.6));
-net.setConnection(lID(6), lID(6), struct('initType', 'randn', 'connectivity', 0.05,'radius', 0.5));
+%net.setConnection(lID(5), lID(5), struct('initType', 'randn', 'connectivity', 0.2, 'radius', 0.6));
+%net.setConnection(lID(6), lID(6), struct('initType', 'randn', 'connectivity', 0.05,'radius', 0.5));
 
-net.setConnection(lID(4), lID(5), struct('initType', 'randn', 'connectivity', 0.2, 'radius', 1.0));
-net.setConnection(lID(5), lID(6), struct('initType', 'randn', 'connectivity', 0.1, 'radius', 1.0));
-net.setConnection(lID(6), lID(4), struct('initType', 'randn', 'connectivity', 0.1, 'radius',0.5));
+%net.setConnection(lID(4), lID(5), struct('initType', 'randn', 'connectivity', 0.2, 'radius', 1.0));
+%net.setConnection(lID(5), lID(6), struct('initType', 'randn', 'connectivity', 0.1, 'radius', 1.0));
+%net.setConnection(lID(6), lID(4), struct('initType', 'randn', 'connectivity', 0.1, 'radius',0.5));
 
 % net.removeLayer(lID(4))
 % net.setConnection(lID(2), lID(5), struct('initType', 'randn', 'connectivity', 1.0, 'radius', 1.0));
@@ -58,14 +58,14 @@ net.setConnection(lID(6), lID(4), struct('initType', 'randn', 'connectivity', 0.
 boltrain = BatchOutputLayerTrain();
 initLen = 100;
 tic
-x = boltrain.train(net, train_input, train_output, initLen);
+x = boltrain.train(net, train_input, train_output, initLen, 'ridge1');
 toc
 % figure, plot(x')
 
-%% Generate
+%% Generate/Predict
 tic
 net.rememberStates();
-y = net.generate(test_input);
+y = net.predict(test_input);
 net.recallStates();
 toc
 
