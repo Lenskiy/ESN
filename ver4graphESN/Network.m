@@ -35,7 +35,7 @@ classdef Network < handle
             obj.networkArchitecture = networkArchitecture;
             obj.Weights = sparse([]);
             obj.forwardStates = []; % the first index resereved for bias i.e. always 1;
-            obj.leakage = [];
+            obj.leakage = ones(2, 1);
             obj.noiseStd = [];
             obj.inputIDs = [];
             obj.outputIDs = [];
@@ -59,7 +59,7 @@ classdef Network < handle
 
             obj.layersCells(obj.IDtoInd(id), :) = {id, numNodes, layerType, struct2cell(params)};
             
-            obj.forwardStates = full([obj.forwardStates, zeros(1, numNodes)]);
+            obj.forwardStates = full([obj.forwardStates; zeros(numNodes, 1)]);
             
             obj.setActiveFn(id, params.nodeType);
             obj.setLeakage(id, params.leakageInit, params.leakageVal);
@@ -92,8 +92,8 @@ classdef Network < handle
                     obj.IDtoInd(id:end) = obj.IDtoInd(id:end) - 1; 
                     obj.IDtoInd(id) = 0;                    
                     obj.indToID(ind) = [];                   
-                    obj.Weights(inds(1):inds(2), :) = [];
                     obj.Weights(:, inds(1):inds(2)) = [];
+                    obj.Weights(inds(1):inds(2), :) = [];
                     obj.forwardStates(inds(1):inds(2)) = [];
                     obj.leakage(inds(1):inds(2)) = [];
                     % remove connections in networkArchitecture
@@ -273,7 +273,7 @@ classdef Network < handle
             else
                 maxVal = 1;
             end
-            obj.setWeights(layerIndex1, layerIndex2, radius * W/maxVal);
+            obj.setWeights(id1, id2, radius * W/maxVal);
         end
         %------------------------------------------------------------------------------------
         function setConnections(obj, arch, initTypes, radii)
@@ -309,17 +309,17 @@ classdef Network < handle
                 case 'rand'
                     nonZeroElementsInds = randperm(nRows * nCols,...
                         floor(nRows * nCols * (1 - params.connectivity)));
-                    W = rand(nRows, nCols);
+                    W = rand(nCols, nRows);
                     W(W ~= 0) = W(W ~= 0) - 0.5;
                     W(nonZeroElementsInds) = 0;                                         
                 case 'randn'
                     nonZeroElementsInds = randperm(nRows * nCols,...
                         floor(nRows * nCols * (1 - params.connectivity)));
-                    W = randn(nRows,nCols);
+                    W = randn(nCols, nRows);
                     W(nonZeroElementsInds) = 0;  
             end
-            obj.Weights(srcInds, destInds) = W;
-            
+           % obj.Weights(srcInds, destInds) = W;
+            obj.setWeights(sourceId, destId, W);
             if(~isempty(params.radius))
                 obj.setRadius(params.radius, [sourceId, destId]);
             end
@@ -383,6 +383,7 @@ classdef Network < handle
                 end
             end
             
+
             h = view(graph);
         end
         %------------------------------------------------------------------------------------
@@ -454,7 +455,7 @@ classdef Network < handle
             inds1 = obj.blocksInds(layerIndex, 1) : obj.blocksInds(layerIndex, 2);  
             layerIndex = obj.IDtoInd(id2);
             inds2 = obj.blocksInds(layerIndex, 1) : obj.blocksInds(layerIndex, 2);              
-            W = obj.Weights(inds1, inds2); 
+            W = obj.Weights(inds2, inds1); 
         end
         %-------------------------------------------------------------------------------------
         function x = activateLayer(obj, x, ind) % this function is not used
@@ -466,14 +467,14 @@ classdef Network < handle
             inds1 = obj.blocksInds(layerIndex, 1) : obj.blocksInds(layerIndex, 2);  
             layerIndex = obj.IDtoInd(id2);
             inds2 = obj.blocksInds(layerIndex, 1) : obj.blocksInds(layerIndex, 2);  
-            obj.Weights(inds1, inds2) = W;
+            obj.Weights(inds2, inds1) = W;
         end
         %-------------------------------------------------------------------------------------
         function setWeightsForSelectedWeights(obj, IDs, ID, W)
             obj.blocksInds(obj.IDtoInd(IDs), :);
             selectedInds = [0; cumsum(obj.blocksInds(obj.IDtoInd(IDs), 2) -  obj.blocksInds(obj.IDtoInd(IDs), 1) + 1)];
             for k = 1:numel(IDs)
-                obj.setWeights(IDs(k), ID, W(selectedInds(k) + 1:selectedInds(k+1), :));
+                obj.setWeights(IDs(k), ID, W(:, selectedInds(k) + 1:selectedInds(k+1)));
             end
         end        
         %-------------------------------------------------------------------------------------
@@ -483,7 +484,7 @@ classdef Network < handle
        
             %leakage = obj.layersCells{layerInd, 4}{4};
             lk = obj.leakage(inds);
-            obj.forwardStates(inds) =  lk .* obj.layersCells{layerInd, 4}{1}(obj.forwardStates * obj.Weights(:, inds))...
+            obj.forwardStates(inds) =  lk .* obj.layersCells{layerInd, 4}{1}(obj.Weights(inds, :) * obj.forwardStates)...
                                         + (1 - lk) .* obj.forwardStates(inds); 
                                    
         end
@@ -494,10 +495,10 @@ classdef Network < handle
        
             %leakage = obj.layersCells{layerInd, 4}{4};
             lk = obj.leakage(inds);
-            obj.forwardStates(inds) =  lk .* obj.layersCells{layerInd, 4}{1}(obj.forwardStates * obj.Weights(:, inds))...
+            obj.forwardStates(inds) =  lk .* obj.layersCells{layerInd, 4}{1}(obj.Weights(inds, :) * obj.forwardStates)...
                                         + (1 - lk) .* obj.forwardStates(inds); 
                                     
-            obj.backwardStates(inds) = 
+            %obj.backwardStates(inds) = 
                                    
         end        
         %-------------------------------------------------------------------------------------
@@ -596,5 +597,13 @@ classdef Network < handle
                 
                 propogationRoute = obj.indToID(propogationRoute);
        end  
+       %-------------------------------------------------------------------------------------
+       function propogationOrder = getPropogationRoute(obj)
+           propogationOrder = [obj.getIdByType('input'), obj.propogationOrder];
+       end
+       %-------------------------------------------------------------------------------------
+       function propogationOrder = getBackPropogationRoute(obj)
+           propogationOrder = [obj.getIdByType('output'), obj.propogationOrder(end:-1:1)]; % add input node
+       end       
     end    
 end

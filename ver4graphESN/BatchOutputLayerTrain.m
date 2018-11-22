@@ -52,7 +52,7 @@ classdef BatchOutputLayerTrain < handle
             err = W_out * x_collected - target(:, initLen + 1:end) + (lambda * sum(W_out.^2,2));
             mse = sum(sum(err.^2, 2))/(nExamples - initLen);
             % put the trained weights in the weight matrix of the network 
-             net.setWeightsForSelectedWeights(toOuputIDs, outputId, W_out');
+             net.setWeightsForSelectedWeights(toOuputIDs, outputId, W_out);
       end
       %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       function error = mse(obj, x, y)
