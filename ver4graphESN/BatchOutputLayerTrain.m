@@ -25,7 +25,7 @@ classdef BatchOutputLayerTrain < handle
             
             switch type
                 case 'ridge1'
-                    lambda = 1e-3;
+                    lambda = 1e-5;
                     x_interest_inv = pseudoinverse(x_collected,[],'lsqr', 'tikhonov',...
                       {@(x,r) r*normest(x_interest)*x, lambda});
                     W_out =   target(:, initLen + 1:end) * x_interest_inv;
